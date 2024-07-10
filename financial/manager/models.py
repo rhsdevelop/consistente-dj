@@ -126,6 +126,7 @@ class Diario(models.Model):
     # TipoMov INTEGER NOT NULL, ') # 0 para Receita e 1 para Despesa 3 Transf Ent 4 Transf Sai
     tipomov = models.IntegerField()
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT)
+    origin_transfer = models.IntegerField(blank=True, null=True) # Campo pra uso interno. Inserir id do tipomov 4 (evento que paga) no tipomov 3 (evento que recebe). Para trasnferências e cartões de crédito.
     create_user = models.ForeignKey(User, verbose_name='Criado por', on_delete=models.PROTECT, related_name='daily_user_create', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     assign_user = models.ForeignKey(User, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='daily_user_assign', blank=True, null=True)

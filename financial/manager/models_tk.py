@@ -36,7 +36,7 @@ class Categorias(models.Model):
         db_table = 'categorias'
 
 
-class Diario(models.Model):
+class Diarios(models.Model):
     datafirstupdate = models.CharField(blank=True, null=True)
     datalastupdate = models.CharField(blank=True, null=True)
     datadoc = models.CharField(blank=True, null=True)

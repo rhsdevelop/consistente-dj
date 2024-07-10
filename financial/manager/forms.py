@@ -111,7 +111,36 @@ class AddDiarioForm(forms.ModelForm):
     )
     class Meta:
         model = Diario
-        exclude = ['id', 'datafirstupdate', 'datalastupdate', 'create_user', 'created', 'assign_user', 'modified']
+        exclude = ['id', 'datafirstupdate', 'datalastupdate', 'tipomov', 'origin_transfer', 'create_user', 'created', 'assign_user', 'modified']
+
+
+class TransfereDiarioForm(forms.ModelForm):
+    banco_rec = forms.ModelChoiceField(queryset=Banco.objects.all().order_by('nomebanco'), label='Para banco')
+    datadoc = forms.DateField(
+        label='Data Evento',
+        widget=forms.widgets.DateInput(
+            attrs={'type': "date"},
+            format='%Y-%m-%d'
+        ),
+    )
+    datavenc = forms.DateField(
+        label='Vencimento',
+        widget=forms.widgets.DateInput(
+            attrs={'type': "date"},
+            format='%Y-%m-%d'
+        ),
+    )
+    datapago = forms.DateField(
+        label='Pagamento',
+        widget=forms.widgets.DateInput(
+            attrs={'type': "date"},
+            format='%Y-%m-%d'
+        ),
+        required=False,
+    )
+    class Meta:
+        model = Diario
+        fields = ['consistente_cliente', 'datadoc', 'banco', 'descricao', 'valor', 'datavenc', 'datapago']
 
 
 class FindDiarioForm(forms.Form):

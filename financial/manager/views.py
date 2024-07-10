@@ -1,10 +1,12 @@
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from calendar import monthrange
 
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User
+from django.db.models import Sum
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.template import loader
@@ -514,7 +516,6 @@ def add_receber(request):
         form = AddDiarioForm(request.POST)
         if not request.user.is_staff:
             del form.fields['consistente_cliente']
-        del form.fields['tipomov']
         if form.is_valid():
             item = form.save(commit=False)
             if not request.user.is_staff:
@@ -577,7 +578,6 @@ def edit_receber(request, diario_id):
         form = AddDiarioForm(request.POST, instance=receber)
         if not request.user.is_staff:
             del form.fields['consistente_cliente']
-        del form.fields['tipomov']
         if form.is_valid():
             item = form.save(commit=False)
             item.assign_user = request.user
@@ -661,14 +661,17 @@ def list_receber(request):
             }
             filter_search['%s__lte' % chave[key]] = value
         elif key in ['parceiro', 'categoria'] and value:
-            filter_search['%s__in' % key] = value
+            value = request.GET.getlist(key)
+            filter_search['%s_id__in' % key] = value
     list_receber = Diario.objects.filter(**filter_customer).filter(**filter_search).order_by('datadoc')
+    soma = round(list_receber.aggregate(Sum('valor'))['valor__sum'], 2)
     template = loader.get_template('diario/receber/list.html')
     context = {
         'title': 'Contas à Receber',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
         'list_receber': list_receber,
         'form': form,
+        'soma': soma,
         'active_diario': 'show',
         'active_diario_receber': 'active',
     }
@@ -682,7 +685,6 @@ def add_pagar(request):
         form = AddDiarioForm(request.POST)
         if not request.user.is_staff:
             del form.fields['consistente_cliente']
-        del form.fields['tipomov']
         if form.is_valid():
             item = form.save(commit=False)
             if not request.user.is_staff:
@@ -745,7 +747,6 @@ def edit_pagar(request, diario_id):
         form = AddDiarioForm(request.POST, instance=pagar)
         if not request.user.is_staff:
             del form.fields['consistente_cliente']
-        del form.fields['tipomov']
         if form.is_valid():
             item = form.save(commit=False)
             item.assign_user = request.user
@@ -769,7 +770,7 @@ def edit_pagar(request, diario_id):
     filter_categoria = filter_customer.copy()
     filter_categoria['tipomov'] = 1
     filter_banco = filter_customer.copy()
-    filter_banco['tipomov__in'] = [0, 1, 3]
+    #filter_banco['tipomov__in'] = [0, 1, 3]
     form.fields['parceiro'].queryset = Parceiro.objects.filter(**filter_parceiro).order_by('nome')
     form.fields['categoria'].queryset = Categoria.objects.filter(**filter_categoria).order_by('categoria')
     form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
@@ -787,12 +788,13 @@ def edit_pagar(request, diario_id):
 @login_required
 @permission_required('manager.view_diario')
 def list_pagar(request):
+    filter_customer = {}
+    filter_search = {}
     if request.GET:
         form = FindDiarioForm(request.GET)
     else:
         form = FindDiarioForm()
-    filter_customer = {}
-    filter_search = {}
+        filter_search['datadoc__range'] = date.today().replace(day=1), date.today().replace(day=monthrange(date.today().year, date.today().month)[1])
     if not request.user.is_staff:
         crc_user = ConsistenteUsuario.objects.filter(user=request.user)
         if crc_user:
@@ -805,7 +807,7 @@ def list_pagar(request):
     filter_categoria = filter_customer.copy()
     filter_categoria['tipomov'] = 1
     filter_banco = filter_customer.copy()
-    filter_banco['tipomov__in'] = [0, 1, 3]
+    #filter_banco['tipomov__in'] = [0, 1, 3]
     filter_customer['tipomov'] = 1
     form.fields['parceiro'].queryset = Parceiro.objects.filter(**filter_parceiro).order_by('nome')
     form.fields['categoria'].queryset = Categoria.objects.filter(**filter_categoria).order_by('categoria')
@@ -828,15 +830,225 @@ def list_pagar(request):
             }
             filter_search['%s__lte' % chave[key]] = value
         elif key in ['parceiro', 'categoria'] and value:
-            filter_search['%s__in' % key] = value
+            value = request.GET.getlist(key)
+            filter_search['%s_id__in' % key] = value
     list_pagar = Diario.objects.filter(**filter_customer).filter(**filter_search)
+    soma = round(list_pagar.aggregate(Sum('valor'))['valor__sum'], 2)
     template = loader.get_template('diario/pagar/list.html')
     context = {
         'title': 'Contas à Pagar',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
         'list_pagar': list_pagar,
         'form': form,
+        'soma': soma,
         'active_diario': 'show',
         'active_diario_pagar': 'active',
+    }
+    return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.add_diario')
+def add_transferir(request):
+    if request.POST:
+        form = TransfereDiarioForm(request.POST)
+        if not request.user.is_staff:
+            del form.fields['consistente_cliente']
+        if form.is_valid():
+            try:
+                item = form.save(commit=False)
+                if not request.user.is_staff:
+                    crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+                    if crc_user:
+                        item.consistente_cliente = crc_user.first().consistente_cliente
+                        parceiro = Parceiro.objects.filter(consistente_cliente=crc_user.first().consistente_cliente).order_by('id').first()
+                        categoria = Categoria.objects.filter(consistente_cliente=crc_user.first().consistente_cliente, tipomov=2).order_by('id').first()
+                else:
+                    parceiro = Parceiro.objects.all().order_by('id').first()
+                    categoria = Categoria.objects.filter(tipomov=2).order_by('id').first()
+                item.parceiro = parceiro
+                item.categoria = categoria
+                item.create_user = request.user
+                item.assign_user = request.user
+                item.tipomov = 4
+                item.save()
+                salvo = Diario.objects.filter(id=item.id).values('consistente_cliente_id', 'datadoc', 'datavenc', 'datapago', 'descricao', 'valor', 'banco_id', 'categoria_id', 'parceiro_id', 'create_user_id', 'assign_user_id')
+                new_item = salvo[0].copy()
+                new_item['origin_transfer'] = item.id
+                new_item['tipomov'] = 3
+                new_item['banco_id'] = request.POST['banco_rec']
+                Diario.objects.create(**new_item)
+                messages.success(request, 'Registro adicionado com sucesso.')
+            except Exception as err:
+                messages.error(request, str(err))
+        else:
+            messages.error(request, form.errors)
+        return redirect('/transferir/list')
+    filter_customer = {}
+    form = TransfereDiarioForm()
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            form.fields['consistente_cliente'].widget = forms.HiddenInput()
+            filter_customer['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    filter_parceiro = filter_customer.copy()
+    filter_parceiro['modo__in'] = [0, 2]
+    filter_categoria = filter_customer.copy()
+    filter_categoria['tipomov'] = 1
+    filter_banco = filter_customer.copy()
+    filter_banco['tipomov__in'] = [0, 1, 3]
+    form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    form.fields['banco_rec'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    form.fields['datadoc'].initial = str(date.today())
+    form.fields['datavenc'].initial = str(date.today())
+    template = loader.get_template('diario/transferir/add.html')
+    context = {
+        'title': 'Transferências entre Contas',
+        'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'form': form,
+        'active_diario': 'show',
+        'active_diario_transferir': 'active',
+    }
+    return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.change_diario')
+def edit_transferir(request, diario_id):
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            transferir = Diario.objects.get(id=diario_id, consistente_cliente_id=crc_user.first().consistente_cliente_id)
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    else:
+        transferir = Diario.objects.get(id=diario_id)
+    transferir_rec = Diario.objects.get(origin_transfer=diario_id)
+    if request.POST:
+        form = TransfereDiarioForm(request.POST, instance=transferir)
+        if not request.user.is_staff:
+            del form.fields['consistente_cliente']
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.assign_user = request.user
+            item.save()
+            transferir_rec.consistente_cliente_id = transferir.consistente_cliente_id
+            transferir_rec.datadoc = request.POST['datadoc']
+            transferir_rec.datavenc = request.POST['datavenc']
+            if 'datapago' in request.POST and request.POST['datapago']:
+                transferir_rec.datapago = request.POST['datapago']
+            transferir_rec.descricao = request.POST['descricao']
+            transferir_rec.valor = request.POST['valor']
+            transferir_rec.assign_user_id = request.user
+            transferir_rec.banco_id = request.POST['banco_rec']
+            transferir_rec.save()
+            messages.success(request, 'Registro alterado com sucesso.')
+        else:
+            messages.error(request, form.errors)
+        return redirect('/transferir/list')
+    filter_customer = {}
+    form = TransfereDiarioForm(instance=transferir)
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            form.fields['consistente_cliente'].widget = forms.HiddenInput()
+            filter_customer['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    filter_parceiro = filter_customer.copy()
+    filter_parceiro['modo__in'] = [0, 2]
+    filter_categoria = filter_customer.copy()
+    filter_categoria['tipomov'] = 1
+    filter_banco = filter_customer.copy()
+    filter_banco['tipomov__in'] = [0, 1, 3]
+    form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    form.fields['banco_rec'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    form.fields['banco_rec'].initial = transferir_rec.banco
+    form.fields['datadoc'].initial = str(date.today())
+    form.fields['datavenc'].initial = str(date.today())
+    template = loader.get_template('diario/transferir/edit.html')
+    context = {
+        'title': 'Transferências entre Contas',
+        'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'form': form,
+        'active_diario': 'show',
+        'active_diario_transferir': 'active',
+    }
+    return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.view_diario')
+def list_transferir(request):
+    filter_customer = {}
+    filter_search = {}
+    if request.GET:
+        form = FindDiarioForm(request.GET)
+    else:
+        form = FindDiarioForm()
+        filter_search['datadoc__range'] = date.today().replace(day=1), date.today().replace(day=monthrange(date.today().year, date.today().month)[1])
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            filter_customer['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    filter_banco = filter_customer.copy()
+    filter_banco['tipomov__in'] = [0, 1, 3]
+    filter_customer['tipomov__in'] = [4]
+    filter_customer['banco__tipomov__in'] = [0, 1, 3]
+    form.fields['parceiro'].widget = forms.HiddenInput()
+    form.fields['categoria'].widget = forms.HiddenInput()
+    form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    for key, value in request.GET.items():
+        if key in ['consistente_cliente', 'banco'] and value:
+            filter_search[key] = value
+        elif key in ['data_inicial', 'venc_inicial', 'pag_inicial'] and value:
+            chave = {
+                'data_inicial': 'datadoc',
+                'venc_inicial': 'datavenc',
+                'pag_inicial': 'datapago',
+            }
+            filter_search['%s__gte' % chave[key]] = value
+        elif key in ['data_final', 'venc_final', 'pag_final'] and value:
+            chave = {
+                'data_final': 'datadoc',
+                'venc_final': 'datavenc',
+                'pag_final': 'datapago',
+            }
+            filter_search['%s__lte' % chave[key]] = value
+        elif key in ['parceiro', 'categoria'] and value:
+            value = request.GET.getlist(key)
+            filter_search['%s_id__in' % key] = value
+    list_transfere = Diario.objects.filter(**filter_customer).filter(**filter_search).exclude(descricao='<CRED.CARD>').order_by('datadoc')
+    soma = round(list_transfere.aggregate(Sum('valor'))['valor__sum'], 2)
+    list_transferir = []
+    for item in list_transfere:
+        new_item = {
+            'id': item.id,
+            'datadoc': item.datadoc,
+            'banco': item.banco,
+            'banco_rec': Diario.objects.get(origin_transfer=item.id, tipomov=3).banco,
+            'descricao': item.descricao,
+            'valor': item.valor,
+            'datavenc': item.datavenc,
+            'datapago': item.datapago,
+        }
+        list_transferir.append(new_item)
+    template = loader.get_template('diario/transferir/list.html')
+    context = {
+        'title': 'Transferências entre Contas',
+        'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'list_transferir': list_transferir,
+        'form': form,
+        'soma': soma,
+        'active_diario': 'show',
+        'active_diario_transferir': 'active',
     }
     return HttpResponse(template.render(context, request))

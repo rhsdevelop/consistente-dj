@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load bootstrap %}
+
+{% block corpo %}
+<div class="card card mb-3">
+  <div class="card-header">
+    <div class="col-auto align-self-center">
+      <h5 class="mb-0"><img class="me-2" src="/static/images/categoria.png" alt="" width="40" />{{ title }}</h5>
+    </div>
+  </div>
+</div>
+<br>
+{% if perms.manager.add_categoria %}
+<div class="col-lg-12">
+  <a href="/categoria/add/" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
+</div>
+{% endif %}
+<br>
+<!-- Card Header - Accordion -->
+<button class="btn btn-falcon-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter"><span class="fas fa-filter"></span> Filtro</button><br>
+<!-- Card Content - Collapse -->
+<br>
+<div class="card shadow mb-4">
+  <div class="card overflow-hidden collapse" id="collapseFilter">
+      <div class="card-body">
+        <form action="." method="get">
+          <div class="row">
+            {% if request.user.is_staff %}
+            <div class="col-lg-3">
+              {{ form.consistente_cliente|bootstrap }}
+            </div>
+            {% endif %}
+            <div class="col-lg-3">
+              {{ form.categoria|bootstrap }}
+            </div>
+            <div class="col-lg-3">
+              {{ form.tipomov|bootstrap }}
+            </div>
+          </div>
+          <br>
+          <div class="col-lg-12">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+          </div>
+        </form>
+      </div>
+  </div>
+</div>
+<div class="card shadow mb-4">
+  <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Dados selecionados</h6>
+  </div>
+  <div class="card-body">
+    <div id="tableExample" data-list='{"valueNames":["categ","tipo","contempla", "criado", "data", "acoes"],"page":25,"pagination":true}'>
+      <div class="table-responsive scrollbar">
+        <table class="table table-sm table-bordered table-striped fs-10 mb-0">
+          <thead class="bg-200">
+            <tr>
+              <th class="text-900 sort" data-sort="categ">Categoria</th>
+              <th class="text-900 sort" data-sort="tipo">Tipo de Movimento</th>
+              <th class="text-900 sort" data-sort="contempla">Contempla no painel</th>
+              <th class="text-900 sort" data-sort="criado">Criado por</th>
+              <th class="text-900 sort" data-sort="data">Data de criação</th>
+              <th class="text-900 sort" data-sort="acoes">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="list">
+            {% for categoria in list_categoria %}
+            <tr>
+              <th class="categ" scope="row">{{ categoria.categoria }}</th>
+              <td class="tipo" >{{ categoria.get_tipomov_display }}</td>
+              <td class="contempla" >{% if categoria.classifica %}<span class="far fa-check-circle"></span>{% else %}<span class="far fa-circle"></span>{% endif %}</td>
+              <td class="criado" >{{ categoria.create_user }}</td>
+              <td class="data" >{{ categoria.created }}</td>
+              <td class="acoes" >{% if perms.manager.change_categoria %}<a href="/categoria/{{ categoria.id }}/edit/" ><button class="btn btn-info"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="row align-items-center mt-3">
+        <div class="pagination d-none"></div>
+        <div class="col">
+          <p class="mb-0 fs-10">
+            <span class="d-none d-sm-inline-block" data-list-info="data-list-info"></span>
+            <span class="d-none d-sm-inline-block"> &mdash;</span>
+            <a class="fw-semi-bold" href="#!" data-list-view="*">Ver tudo<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semi-bold d-none" href="#!" data-list-view="less">Ver menos<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+          </p>
+        </div>
+        <div class="col-auto d-flex">
+          <button class="btn btn-sm btn-primary" type="button" data-list-pagination="prev"><span>Anterior</span></button>
+          <button class="btn btn-sm btn-primary px-4 ms-2" type="button" data-list-pagination="next"><span>Próximo</span></button>
+        </div>
+      </div>      
+    </div>
+  </div>
+</div>
+{% endblock %}

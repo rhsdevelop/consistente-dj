@@ -1,0 +1,21 @@
+extends ../../layouts/LayoutComponent
+include ../../mixins/utilities/Visibility
+
+append variables
+  -
+    var pageHeader = {
+      title: 'Visibility',
+      description: 'Control the visibility, without modifying the display, of elements with visibility utilities.',
+      url: `https://getbootstrap.com/docs/${bootstrapVersion}/utilities/visibility/`,
+      linkText: 'Visibility on Bootstrap'
+    }
+
+append content
+  +PageHeader(pageHeader)
+  .card
+    .card-header
+      +DocCardHeader('Example')
+        +VisibilityExampleDescription
+    .card-body.bg-body-tertiary
+      +ComponentCardLib
+        +VisibilityExampleDemo

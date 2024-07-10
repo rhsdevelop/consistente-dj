@@ -1,0 +1,27 @@
+extends ../../layouts/LayoutComponent
+include ../../mixins/utilities/Colors
+
+append variables
+  -
+    var pageHeader = {
+      title: 'Colors',
+      description: 'Convey meaning through color with a handful of color utility classes. Includes support for styling links with hover states, too.',
+      url: `https://getbootstrap.com/docs/${bootstrapVersion}/utilities/colors/`,
+      linkText: 'Colors on Bootstrap'
+    }
+
+append content
+
+  +PageHeader(pageHeader)
+
+  +ComponentCard({
+    title: 'Text colors',
+    anchor: true
+  }).mb-3
+    +TextColorsExample
+
+  +ComponentCard({
+    title: 'Text opacity',
+    anchor: true
+  })
+    +TextOpacityExample

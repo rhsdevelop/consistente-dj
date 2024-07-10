@@ -1,0 +1,259 @@
+mixin AddProductHeader
+  .card.mb-3
+    .card-body
+      .row.flex-between-center
+        .col-md
+          h5.mb-2.mb-md-0 Add a product
+        .col-auto
+          button.btn.btn-link.text-secondary.p-0.me-3.fw-medium(role='button') Discard
+          button.btn.btn-primary(role='button') Add product 
+
+mixin AddProductFooter
+  .card&attributes(attributes)
+    .card-body
+      .row.justify-content-between.align-items-center
+        .col-md
+          h5.mb-2.mb-md-0 You're almost done!
+        .col-auto
+          button.btn.btn-link.text-secondary.p-0.me-3.fw-medium(role='button') Discard
+          button.btn.btn-primary(role='button') Add product 
+
+mixin ProductType
+  .card.mb-3&attributes(attributes)
+    .card-header.bg-body-tertiary
+      h6.mb-0 Type
+    .card-body
+      .row.gx-2
+        .col-12.mb-3
+          label.form-label(for="product-category") Select category:
+          select.form-select#product-category(name="product-category") 
+            option(value="computerAccessories") Computer & Accessories
+            option Class, Training, or Workshop
+            option Concert or Performance
+            option Conference
+            option Convention
+            option Dinner or Gala
+            option Festival or Fair
+        .col-12
+          label.form-label(for="product-subcategory") Select sub-category:
+          select.form-select#product-subcategory(name="product-subcategory") 
+            option(value="laptop") Laptop
+            option Class, Training, or Workshop
+            option Concert or Performance
+            option Conference
+            option Convention
+            option Dinner or Gala
+            option Festival or Fair
+
+mixin ProductTags
+  .card.mb-3&attributes(attributes)
+    .card-header.bg-body-tertiary
+      h6.mb-0 Tags
+    .card-body
+      label.form-label(for="product-tags") Add a keyword:
+      input.form-control.js-choice#product-tags(
+        type="text" 
+        name="tags"
+        required
+        size="1"
+        data-options!={removeItemButton: true, placeholder: false}
+      )
+
+mixin ProductPricing
+  .card.mb-3&attributes(attributes)
+    .card-header.bg-body-tertiary
+      h6.mb-0 Pricing
+    .card-body
+      .row.gx-2
+        .col-8.mb-3
+          label.form-label(for="base-price") Base Price: 
+            span(data-bs-toggle="tooltip" data-bs-placement="top" title="Product regular price")
+              span.fas.fa-question-circle.text-primary.fs-10.ms-1
+          input.form-control#base-price(type="text")
+        .col-4 
+          label.form-label(for="price-currency") Currency:
+          select.form-select#price-currency(name="price-currency") 
+            option(value="usd") USD
+            option(value="eur") EUR
+            option(value="gbp") GBP
+            option(value="cad") CAD
+        .col-12.mb-4
+          label.form-label(for="discount-percentage") Discount in percentage:
+          input.form-control#discount-percentage(type="text")
+        .col-12
+          label.form-label(for="final-price") Final price:
+            span(data-bs-toggle="tooltip" data-bs-placement="top" title="Product final price")
+              span.fas.fa-question-circle.text-primary.fs-10.ms-1
+          input.form-control#final-price(disabled type="text")
+
+mixin ProductShipping
+  .card.mb-3&attributes(attributes)
+    .card-header.bg-body-tertiary
+      h6.mb-0 Shipping
+    .card-body
+      .form-check
+        input#vendor-delivery.form-check-input.p-2(type='radio', name='product-shipping')
+        label.form-check-label.fs-9.fw-normal.text-700(for='vendor-delivery')
+          | Delivered by vendor (you)
+      .form-check
+        input#falcon-delivery.form-check-input.p-2(type='radio', name='product-shipping')
+        label.form-check-label.fs-9.fw-normal.text-700(for='falcon-delivery')
+          | Delivered by FALCON 
+          span.badge.badge-subtle-warning.rounded-pill.ms-2 Recommended
+
+mixin ProductStock
+  .card.mb-3&attributes(attributes)
+    .card-header.bg-body-tertiary
+      h6.mb-0 Stock status
+    .card-body
+      .form-check
+        input#in-stock.form-check-input.p-2(type='radio', name='stock-status')
+        label.form-check-label.fs-9.fw-normal.text-700(for='in-stock')
+          | In stock
+      .form-check
+        input#unavailable.form-check-input.p-2(type='radio', name='stock-status')
+        label.form-check-label.fs-9.fw-normal.text-700(for='unavailable')
+          | Unavailable
+      .form-check
+        input#to-be-announced.form-check-input.p-2(type='radio', name='stock-status')
+        label.form-check-label.fs-9.fw-normal.text-700(for='to-be-announced')
+          | To be announced
+
+mixin BasicInformation
+  .card.mb-3&attributes(attributes)
+    .card-header.bg-body-tertiary
+      h6.mb-0 Basic information
+    .card-body
+      form
+        .row.gx-2
+          .col-12.mb-3
+            label.form-label(for="product-name") Product name:
+            input.form-control#product-name(type="text")
+          .col-12.mb-3
+            label.form-label(for="manufacturar-name") Manufacturar Name:
+            input.form-control#manufacturar-name(type="text")
+          .col-12.mb-3
+            label.form-label(for="identification-no") Product Identification No.:
+            input.form-control#identification-no(type="text")
+          .col-12.mb-3
+            label.form-label(for="product-summary") Product Summary: 
+            input.form-control#product-summary(type="text")
+
+mixin ProductImages
+  .card.mb-3&attributes(attributes)
+    .card-header.bg-body-tertiary
+      h6.mb-0 Add images
+    .card-body
+      form.dropzone.dropzone-multiple.p-0#dropzoneMultipleFileUpload(data-dropzone action='#!' data-options!={ acceptedFiles: 'image/*' })
+        .fallback
+          input(name='file' type='file', multiple)
+        .dz-message(data-dz-message) 
+          img(src=`${CWD}assets/img/icons/cloud-upload.svg`, width=25 alt="").me-2
+          span.d-none.d-lg-inline Drag your image here
+            br 
+            | or, 
+          span.btn.btn-link.p-0.fs-10 Browse
+        .dz-preview.dz-preview-multiple.m-0.d-flex.flex-column
+          .d-flex.media.align-items-center.mb-3.pb-3.border-bottom.btn-reveal-trigger
+            img(src=`${CWD}assets/img/icons/cloud-upload.svg` alt="..." data-dz-thumbnail).dz-image
+            .flex-1.d-flex.flex-between-center
+              div
+                h6(data-dz-name)
+                .d-flex.align-items-center
+                  p.mb-0.fs-10.text-400.lh-1(data-dz-size)
+                  .dz-progress
+                    span.dz-upload(data-dz-uploadprogress='')
+              .dropdown.font-sans-serif
+                button.btn.btn-link.text-600.btn-sm.dropdown-toggle.btn-reveal.dropdown-caret-none(type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false")
+                  span.fas.fa-ellipsis-h
+                .dropdown-menu.dropdown-menu-end.border.py-2
+                  a.dropdown-item(href="#!" data-dz-remove) Remove File
+
+mixin ProductDetails 
+  .card.mb-3&attributes(attributes)
+    .card-header.bg-body-tertiary
+      h6.mb-0 Details
+    .card-body
+      .row.gx-2
+        .col-12.mb-3
+          label.form-label(for="product-description") Product description:
+          .create-product-description-textarea
+            textarea.tinymce.d-none(data-tinymce name='product-description' id="product-description" required)
+        .col-sm-6.mb-3
+          label.form-label(for="import-status") Import Status: 
+          select.form-select#import-status(name="import-status") 
+            option(value="imported") Imported
+            option(value="processing") Processing 
+            option(value="validating") Validating 
+            option(value="draft") Draft
+        .col-sm-6.mb-3
+          label.form-label(for="origin-country") Country of Origin: 
+          select.form-select#origin-country(name="origin-country") 
+            option(value="") Select 
+            option(value="China") China
+            option(value="India") India
+            option(value="United States") United States
+            option(value="Indonesia") Indonesia
+            option(value="Pakistan") Pakistan
+            option(value="Brazil") Brazil
+            option(value="Nigeria") Nigeria
+            option(value="Bangladesh") Bangladesh
+            option(value="Russia") Russia
+            option(value="Japan") Japan
+            option(value="Mexico") Mexico
+            option(value="Philippines") Philippines
+            option(value="Egypt") Egypt
+            option(value="Vietnam") Vietnam
+            option(value="Ethiopia") Ethiopia
+            option(value="DR Congo") DR Congo
+            option(value="Iran") Iran
+            option(value="Turkey") Turkey
+            option(value="Germany") Germany
+            option(value="France") France
+        .col-12.mb-3
+          label.form-label(for="release-date") Release Date: 
+          input.form-control#release-date.datetimepicker(type="text" data-options!={ dateFormat: 'd/m/y',disableMobile: true})
+        .col-12.mb-3
+          label.form-label(for="warranty-length") Warranty Lenght: 
+          input.form-control#warranty-length(type="text")
+        .col-12.mb-3
+          label.form-label(for="warranty-policy") Warranty Policy: 
+          input.form-control#warranty-policy(type="text")
+
+mixin ProductSpecifications
+  -
+    var specifications = [
+      {
+        label: "Processor",
+        property: "2.3GHz quad-core Intel Core i5"
+      },
+      {
+        label: "Memory",
+        property: "8GB of 2133MHz LPDDR3 onboard memory"
+      },
+      {
+        label: "Brand name",
+        property: "Apple"
+      }
+    ]
+  .card.mb-3.mb-lg-0&attributes(attributes)
+    .card-header.bg-body-tertiary
+      h6.mb-0 Specifications
+    .card-body
+      each item in specifications
+        .row.gx-2.flex-between-center.mb-3
+          .col-sm-3
+            h6.mb-0.text-600 #{item.label}
+          .col-sm-9
+            .d-flex.flex-between-center
+              h6.mb-0.text-700 #{item.property}
+              a(href="#!" data-bs-toggle="tooltip" data-bs-placement="top" title="Remove").btn.btn-sm.btn-link.text-danger
+                span.fs-10.fas.fa-trash-alt
+
+      .row.gy-3.gx-2 
+        .col-sm-3
+          input.form-control.form-control-sm#specification-label(type="text" placeholder="Label")
+        .col-sm-9
+          .d-flex.gap-2.flex-between-center
+            input.form-control.form-control-sm#specification-property(type="text" placeholder="Property")
+            button.btn.btn-sm.btn-falcon-default Add

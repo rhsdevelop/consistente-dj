@@ -1,0 +1,35 @@
+extends ../../../layouts/LayoutComponent
+
+append variables
+  
+  - var attrsBody = Object.assign(attrsBody, { class: 'overflow-hidden' });
+  - var attrsLayout = Object.assign(attrsLayout, { class: 'vh-100 container' });
+  - 
+    var pageHeader = {
+      title: 'Emoji Button',
+      description: 'Falcon uses emoji-mart as a emoji picker component. It displays a panel of emojis where one can be selected. What is done with the selected emoji is up to you.',
+      url: `https://github.com/missive/emoji-mart`,
+      linkText: 'Documentation for emoji-mart'
+    }
+prepend scripts
+  script(src=`${CWD}vendors/emoji-mart/browser.js`)
+
+
+append content
+  +PageHeader(pageHeader)
+
+  
+  +ComponentCard({
+    title: 'Example',
+    anchor: true,
+  }).mb-3
+    .position-relative#emoji-button
+      .btn.btn-info(data-emoji-mart)
+        span.far.fa-laugh-beam
+
+  .card
+    .card-header
+      h5.mb-0 Javascript
+    .card-body.bg-body-tertiary   
+      +ComponentCardLib
+        script(src=`vendors/emoji-mart/browser.js`)

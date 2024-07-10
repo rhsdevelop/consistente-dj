@@ -1,0 +1,40 @@
+
+// dragging item 
+.sortable-drag {
+  opacity: 1 !important;
+  .sortable-item {
+    transform: rotate(-2deg);
+    top: 5px;
+  }
+}
+
+// create drop placeholder
+.sortable-ghost {
+  .sortable-item {
+    position: relative;
+    box-shadow: none !important;
+
+    &::before {
+      content: '';
+      height: 100%;
+      width: 100%;
+      background-color: var(--#{$prefix}kanban-draggable-source-dragging-bg);
+      border-radius: $border-radius-lg;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+  }
+}
+
+.sortable-dragging * {
+  cursor: grabbing !important;
+}
+
+.sortable-item {
+  cursor: pointer;
+  &:active {
+    cursor: grabbing;
+  }
+}

@@ -1,0 +1,42 @@
+extends ../../layouts/LayoutComponent
+include ../../mixins/utilities/Background
+
+append variables
+  
+  -
+    var pageHeader = {
+      title: 'Background',
+      description: 'Convey meaning through <code>background-color</code> and add decoration with gradients.',
+      url: `https://getbootstrap.com/docs/${bootstrapVersion}/utilities/background/`,
+      linkText: 'Background on Bootstrap'
+    }
+
+append content
+  +PageHeader(pageHeader)
+
+  .card.mb-3
+    .card-header
+      +DocCardHeader('Theme colors')
+    .card-body.bg-body-tertiary
+      +ThemeColorsDemo
+  .card.mb-3
+    .card-header
+      +DocCardHeader('Gray shades')
+    .card-body.bg-body-tertiary
+      +GrayShadeDemo
+  .card.mb-3
+    .card-header
+      +DocCardHeader('Background Gradient')
+        +BackgroundGradientDescription.mt-2.mb-0
+    .card-body.bg-body-tertiary
+      +BackgroundGradientDemo
+  .card.mb-3
+    .card-header
+      +DocCardHeader('Subtle colors')
+    .card-body.bg-body-tertiary
+      +SubtleColorsDemo
+  .card
+    .card-header
+      +DocCardHeader('Color and background')
+    .card-body.bg-body-tertiary
+      +ColorAndBackgroundDemo

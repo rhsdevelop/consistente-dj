@@ -1,0 +1,214 @@
+@if $enable-dark-mode {
+  @include color-mode(dark, true) { 
+
+    // 
+    // Dark colors
+    // 
+    @each $color, $value in $dark-grays {
+      $hover-color: if(color-contrast($value) == $color-contrast-light, shade-color($value, $link-shade-percentage), tint-color($value, $link-shade-percentage));
+      --#{$prefix}gray-#{$color}: #{$value};
+      --#{$prefix}gray-link-hover-#{$color}: #{RGBA(#{to-rgb($hover-color)}, var(--#{$prefix}link-opacity, 1)) if($enable-important-utilities, !important, null)};
+    }
+
+    //
+    // RGB colors
+    // 
+    @each $color, $value in $dark-grays-rgb {
+      --#{$prefix}gray-#{$color}-rgb: #{$value} ;
+    }    
+    @each $color, $value in $theme-dark-colors-rgb {
+      --#{$prefix}#{$color}-rgb: #{$value} ;
+    }
+    
+    --#{$prefix}dark: #{map-get($theme-dark-colors, 'dark')};
+    --#{$prefix}dark-rgb: #{to-rgb(map-get($theme-dark-colors, 'dark'))};
+    --#{$prefix}light-rgb: #{to-rgb(map-get($theme-dark-colors, 'light'))};
+
+    
+    @each $color, $value in $theme-dark-colors {
+      // 
+      // Falcon Button
+      // 
+      --#{$prefix}btn-falcon-#{$color}-color: var(--#{$prefix}#{$color});
+      --#{$prefix}btn-falcon-#{$color}-hover-color: #{shift-color($value, -17%)};
+      --#{$prefix}btn-falcon-#{$color}-active-background: #{shade-color($dark, 40%)};
+      --#{$prefix}btn-falcon-#{$color}-active-color: #{shift-color($value, -17%)};
+    }
+  
+    --#{$prefix}body-color: #{$body-color-dark};
+    --#{$prefix}body-bg: #{$body-bg-dark};
+
+    --#{$prefix}quaternary-bg: #{$body-quaternary-bg-dark};
+    --#{$prefix}quaternary-bg-rgb: #{to-rgb($body-quaternary-bg-dark)};
+
+    --#{$prefix}emphasis-bg: #{$body-emphasis-bg-dark};
+    --#{$prefix}emphasis-bg-rgb: #{to-rgb($body-emphasis-bg-dark)};
+
+    // 
+    // Box Shadows
+    // 
+    --#{$prefix}box-shadow: 0 7px 14px 0 rgba(3, 12, 51, 0.15), 0 3px 6px 0 rgba(0, 0, 0, 0.2);
+    --#{$prefix}box-shadow-sm: 0 .125rem .25rem rgba($black, .075);
+    --#{$prefix}box-shadow-lg: 0 1rem 4rem rgba($black, 0.175);
+    --#{$prefix}box-shadow-inset: inset 0 1px 2px rgba($black, .075);
+
+    // 
+    // Input
+    // 
+    --#{$prefix}input-focus-border-color-global: #{shade-color($component-active-bg, 50%)};
+      
+    // 
+    // Navbar glass
+    // 
+    --#{$prefix}bg-navbar-glass: #{rgba($gray-1100, 0.96)};
+
+    //
+    // Navbar Vertical
+    //
+    // scss-docs-start navbar-vertical-default-dark-variables
+    --#{$prefix}navbar-vertical-default-link-color: #{$navbar-vertical-default-link-color-dark};
+    --#{$prefix}navbar-vertical-default-link-hover-color: #{$navbar-vertical-default-link-hover-color-dark};
+    --#{$prefix}navbar-vertical-default-link-active-color: #{$navbar-vertical-default-link-active-color-dark};
+    --#{$prefix}navbar-vertical-default-link-disable-color: #{$navbar-vertical-default-link-disable-color-dark};
+    --#{$prefix}navbar-vertical-default-hr-color: #{$navbar-vertical-default-hr-color-dark};
+    --#{$prefix}navbar-vertical-default-scrollbar-color: #{$navbar-vertical-default-scrollbar-color-dark};
+    // scss-docs-end navbar-vertical-default-dark-variables
+    
+    // scss-docs-start navbar-vertical-card-dark-variables  --#{$prefix}navbar-vertical-card-hr-color: #{$navbar-vertical-card-hr-color-dark};
+    --#{$prefix}navbar-vertical-card-bg-color: #{$navbar-vertical-card-bg-color-dark};
+    // scss-docs-END navbar-vertical-card-dark-variables
+    
+
+    //
+    // Reveal Button
+    //
+    --#{$prefix}btn-reveal-focus-bg: #{shade-color($dark, 10%)};
+    --#{$prefix}btn-reveal-hover-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.80),
+    0px 1px 1.5px 0px rgba(0, 0, 0, 0.70), 0px 2px 5px 0px rgba(43, 45, 80, 0.40),
+    0px 0px 0px 1px rgba(255, 255, 255, 0.06);
+    --#{$prefix}btn-reveal-focus-border-color: #{shade-color($dark, 12.5%)};
+
+
+    //
+    // Falcon Button
+    //
+    --#{$prefix}btn-falcon-box-shadow: 0 0 0 1px rgba(0,8,19,.3), 0 2px 5px 0 rgba(0,13,33,.5), 0 1px 1.5px 0 rgba(0,8,1,.48), 0 1px 2px 0 rgba(0,8,1,.4);
+    --#{$prefix}btn-falcon-hover-box-shadow: 0 0 0 1px rgba(0,8,19,.3), 0 3px 7px 0 rgba(0,13,33,.8), 0 1px 1.5px 0 #000801, 0 1px 2px 0 #000801;
+
+    --#{$prefix}btn-falcon-default-hover-color: #{shift-color($gray-400, -17%)};
+    --#{$prefix}btn-falcon-default-active-background: #{shade-color($dark, 10%)};
+    --#{$prefix}btn-falcon-default-active-border: #{shift-color($gray-400, -17%)};
+    
+    // 
+    // Avarar 
+    // 
+    --#{$prefix}avatar-name-bg: #{$gray-800};
+    
+    // 
+    // Notification
+    // 
+    --#{$prefix}notification-title-bg: #{$gray-900};
+    --#{$prefix}notification-unread-hover-bg: #{darken($gray-1000, 5%)};
+
+    // 
+    // Kanban
+    // 
+    --#{$prefix}kanban-bg: #{rgba($gray-1000, 0.25)};
+    --#{$prefix}kanban-item-bg: #{$gray-1000};
+    --#{$prefix}kanban-nav-link-card-details-hover-bg: #{$gray-900};
+
+    // 
+    // Gradient Background
+    // 
+    --#{$prefix}bg-shape-bg: #01224b;
+    --#{$prefix}bg-shape-bg-ltd: linear-gradient(-45deg,rgba(20,58,101,.41),#053571);
+    --#{$prefix}bg-shape-bg-dtl: linear-gradient(-45deg,#0a3b79,rgba(9,25,43,.41));
+
+    --#{$prefix}line-chart-gradient: linear-gradient(45deg,#012552,#001835);
+    --#{$prefix}card-gradient: linear-gradient(45deg,#012552,#001835);
+    --#{$prefix}bg-circle-shape: linear-gradient(-45deg,rgba(9,25,43,.41),#0a3b79);
+    --#{$prefix}bg-circle-shape-bg: #4695ff;
+    --#{$prefix}modal-shape-header: linear-gradient(-45deg,#012552,#001835);
+    --#{$prefix}modal-shape-header-after: linear-gradient(-45deg,rgba(20,58,101,.41),#053571);
+    --#{$prefix}modal-shape-header-bg: #01224b;
+
+    // 
+    // Full Calendar
+    // 
+    --fc-page-bg-color: #{$dark};
+    --fc-neutral-bg-color: #{$gray-1000};
+
+    // 
+    // Leaflet map
+    // 
+    --#{$prefix}leaflet-bar-bg: #{$gray-900};
+
+    // 
+    // Choices
+    // 
+    --#{$prefix}bg-choices-close-button: #{$gray-800};
+
+    // 
+    // Thumbnail
+    // 
+    --#{$prefix}thumbnail-bg-global: #{$gray-1000};
+
+    // 
+    // Card span
+    //
+    --#{$prefix}card-span-img-hover-box-shadow: var(--#{$prefix}box-shadow);
+
+    // 
+    // Showcase page
+    //
+    --#{$prefix}setting-toggle-shadow: 0 -7px 14px 0 rgba(3, 12, 51, 0.15), 0 3px 6px 0 rgba(0, 0, 0, 0.2);
+
+    // 
+    // Scrollbar
+    // 
+    --#{$prefix}scrollbar-bg: #{rgba($gray-900, 0.6)};
+    --#{$prefix}simplebar-bg: #{rgba($gray-400, 0.6)};
+
+    //
+    // Custom disabled button
+    // 
+    --#{$prefix}btn-disabled-custom-background: #{rgba($dark, 0.65)};
+    --#{$prefix}btn-disabled-custom-color: #{rgba($white, 0.2)};
+
+    // 
+    // Dropdown
+    // 
+    --#{$prefix}dropdown-bg-global: #{$gray-1000};
+    --#{$prefix}dropdown-link-hover-color-global: #{lighten($gray-300, 5%)};
+    --#{$prefix}dropdown-link-hover-bg-global: #{rgba($gray-1100, 0.4)};
+
+    //
+    // Popover
+    //  
+    --#{$prefix}popover-header-bg-global: #{rgba($gray-1000, .25)};
+    
+    //
+    // Toast
+    //  
+    --#{$prefix}toast-bg-global: #{rgba($gray-900, 0.3)};
+    --#{$prefix}toast-header-bg-global: #{rgba($gray-900, 0.3)};
+      
+    // 
+    // Table variants
+    // 
+    @each $color, $value in $table-variants-dark {
+      .table-#{$color}{
+        --#{$prefix}table-bg: #{$value};
+        --#{$prefix}table-color: #{color-contrast(opaque($gray-1000, $value))};
+        --#{$prefix}table-hover-bg: #{mix(color-contrast(opaque($gray-1000, $value)), $value, percentage($table-hover-bg-factor))};
+        --#{$prefix}table-hover-color: #{color-contrast(mix(color-contrast(opaque($gray-1000, $value)), $value, percentage($table-hover-bg-factor)))};
+        --#{$prefix}table-striped-bg: #{mix(color-contrast(opaque($gray-1000, $value)), $value, percentage($table-striped-bg-factor))};
+        --#{$prefix}table-striped-color: #{color-contrast(mix(color-contrast(opaque($gray-1000, $value)), $value, percentage($table-striped-bg-factor)))};
+        --#{$prefix}table-active-bg: #{mix(color-contrast(opaque($gray-1000, $value)), $value, percentage($table-active-bg-factor))};
+        --#{$prefix}table-active-color: #{color-contrast(mix(color-contrast(opaque($gray-1000, $value)), $value, percentage($table-active-bg-factor)))};
+        --#{$prefix}table-border-color: #{rgba(mix(color-contrast(opaque($gray-1000, $value)), $value, percentage($table-border-factor)), 0.05)};
+      } 
+    }
+  }
+}
+

@@ -1,0 +1,24 @@
+/* -------------------------------------------------------------------------- */
+/*                             Course Details                                 */
+/* -------------------------------------------------------------------------- */
+
+.course-details-sticky-sidebar {
+  @include media-breakpoint-up(lg) {
+    position: sticky;
+    z-index: $zindex-sticky;
+    top: calc($top-nav-height + 1rem);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                             Create Course                                  */
+/* -------------------------------------------------------------------------- */
+.create-course-description-textarea, .create-product-description-textarea {
+  .tox-editor-header {
+    background-color: var(--#{$prefix}emphasis-bg);
+  }
+  .tox-tinymce {
+    border-radius: var(--#{$prefix}border-radius-lg) !important;
+    height: 13.438rem !important;
+  }
+}

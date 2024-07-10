@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load bootstrap %}
+
+{% block corpo %}
+<div class="card card mb-3">
+  <div class="card-header">
+    <div class="col-auto align-self-center">
+      <h5 class="mb-0"><img class="me-2" src="/static/images/salary.png" alt="" width="40" />{{ title }}</h5>
+    </div>
+  </div>
+</div>
+<br>
+{% if perms.manager.add_diario %}
+<div class="col-lg-12">
+  <a href="/receber/add/" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
+</div>
+{% endif %}
+<br>
+<!-- Card Header - Accordion -->
+<button class="btn btn-falcon-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter"><span class="fas fa-filter"></span> Filtro</button><br>
+<!-- Card Content - Collapse -->
+<br>
+<div class="card shadow mb-4">
+  <div class="card overflow-hidden collapse" id="collapseFilter">
+      <div class="card-body">
+        <form action="." method="get">
+          <div class="row">
+            <div class="col-lg-3">
+              {{ form.data_inicial|bootstrap }}
+            </div>
+            <div class="col-lg-3">
+              {{ form.data_final|bootstrap }}
+            </div>
+            <div class="col-lg-3">
+              {{ form.venc_inicial|bootstrap }}
+            </div>
+            <div class="col-lg-3">
+              {{ form.venc_final|bootstrap }}
+            </div>
+            <div class="col-lg-3">
+              {{ form.pag_inicial|bootstrap }}
+            </div>
+            <div class="col-lg-3">
+              {{ form.pag_final|bootstrap }}
+            </div>
+            <div class="col-lg-3">
+              {{ form.banco|bootstrap }}
+            </div>
+            {% if request.user.is_staff %}
+            <div class="col-lg-3">
+              {{ form.consistente_cliente|bootstrap }}
+            </div>
+            {% else %}
+            <div class="col-lg-3">
+              <br>
+            </div>
+            {% endif %}
+            <div class="col-lg-3">
+              {{ form.parceiro|bootstrap }}
+            </div>
+            <div class="col-lg-3">
+              {{ form.categoria|bootstrap }}
+            </div>
+          </div>
+          <br>
+          <div class="col-lg-12">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+          </div>
+        </form>
+      </div>
+  </div>
+</div>
+<div class="card shadow mb-4">
+  <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Dados selecionados</h6>
+  </div>
+  <div class="card-body">
+    <div id="tableExample" data-list='{"valueNames":["datadoc","parceiro","descricao","categoria","valor","datavenc","datapag","banco","acoes"],"page":25,"pagination":true}'>
+      <div class="table-responsive scrollbar">
+        <table class="table table-sm table-bordered table-striped fs-10 mb-0">
+          <thead class="bg-200">
+            <tr>
+              <th class="text-900 sort" data-sort="datadoc">Data</th>
+              <th class="text-900 sort" data-sort="parceiro">Parceiro</th>
+              <th class="text-900 sort" data-sort="descricao">Descrição</th>
+              <th class="text-900 sort" data-sort="categoria">Categoria</th>
+              <th class="text-900 sort" data-sort="valor">Valor</th>
+              <th class="text-900 sort" data-sort="datavenc">Vence em</th>
+              <th class="text-900 sort" data-sort="datapag">Pago em</th>
+              <th class="text-900 sort" data-sort="banco">Banco</th>
+              <th class="text-900 sort" data-sort="acoes">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="list">
+            {% for receber in list_receber %}
+            <tr>
+              <th class="datadoc" scope="row"><span hidden>{{ receber.datadoc|date:'Ymd' }}</span>{{ receber.datadoc|date:'d/m/Y' }}</th>
+              <td class="parceiro" >{{ receber.parceiro }}</td>
+              <td class="descricao" >{{ receber.descricao }}</td>
+              <td class="categoria" >{{ receber.categoria }}</td>
+              <td class="valor" >{{ receber.valor }}</td>
+              <td class="datavenc" ><span hidden>"{{ receber.datavenc|date:'Ymd' }}"</span>{{ receber.datavenc|date:'d/m/Y' }}</td>
+              <td class="datapag" ><span hidden>"{{ receber.datapag|date:'Ymd' }}"</span>{{ receber.datapag|date:'d/m/Y' }}</td>
+              <td class="categoria" >{{ receber.banco }}</td>
+              <td class="acoes" >{% if perms.manager.change_diario %}<a href="/receber/{{ receber.id }}/edit/" ><button class="btn btn-info"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="row align-items-center mt-3">
+        <div class="pagination d-none"></div>
+        <div class="col">
+          <p class="mb-0 fs-10">
+            <span class="d-none d-sm-inline-block" data-list-info="data-list-info"></span>
+            <span class="d-none d-sm-inline-block"> &mdash;</span>
+            <a class="fw-semi-bold" href="#!" data-list-view="*">Ver tudo<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semi-bold d-none" href="#!" data-list-view="less">Ver menos<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+          </p>
+        </div>
+        <div class="col-auto d-flex">
+          <button class="btn btn-sm btn-primary" type="button" data-list-pagination="prev"><span>Anterior</span></button>
+          <button class="btn btn-sm btn-primary px-4 ms-2" type="button" data-list-pagination="next"><span>Próximo</span></button>
+        </div>
+      </div>      
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+  $(document).ready(function() {
+    document.getElementById("id_parceiro").className += " select2 withtags";
+    document.getElementById("id_categoria").className += " select2 withtags";
+    var all = document.getElementsByClassName('select2');
+    for (var i = 0; i < all.length; i++) {
+      all[i].style.width = '100%';
+    };
+    $('.withtags').select2(
+      {tags: true
+      }
+    );
+  });
+  </script>
+  
+{% endblock %}

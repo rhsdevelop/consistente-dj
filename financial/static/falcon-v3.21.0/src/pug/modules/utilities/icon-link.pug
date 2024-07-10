@@ -1,0 +1,49 @@
+extends ../../layouts/LayoutComponent
+
+append variables
+  -
+    var pageHeader = {
+      title: 'Icon link',
+      description: 'Quickly create stylized hyperlinks with Bootstrap Icons or other icons.',
+      url: `https://getbootstrap.com/docs/${bootstrapVersion}/helpers/icon-link/`,
+      linkText: 'Icon link on Bootstrap'
+    }
+
+append content
+
+  +PageHeader(pageHeader)
+  +ComponentCard({
+    title: 'Example',
+    description: `Take a regular <code>&lt;a&gt;</code> element, add <code>.icon-link</code>, and insert an icon on either the left or right of your link text. The icon is automatically sized, placed, and colored.`,
+    anchor:true,
+    descriptionClass:'mt-2'
+  }).mb-3
+    a.mb-3.icon-link(href='#!')
+      = '\n'
+      span.bi.fas.fa-link
+      = '\n'
+      | Icon link
+      = '\n'
+
+    = '\n'
+    br
+    = '\n'
+    
+    a.icon-link(href='#!')
+      = '\n'
+      | Icon link
+      = '\n'
+      span.bi.fas.fa-chevron-right
+      = '\n'
+
+  +ComponentCard({
+    title: 'Style on hover',
+    description: 'Add <code>.icon-link-hover</code> to move the icon to the right on hover.',
+    anchor:true
+  })
+    a.icon-link.icon-link-hover(href='#!')
+      = '\n'
+      | Icon link
+      = '\n'
+      span.bi.fas.fa-chevron-right
+      = '\n'

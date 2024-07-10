@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load bootstrap %}
+
+{% block corpo %}
+<div class="card card mb-3">
+  <div class="card-header">
+    <div class="col-auto align-self-center">
+      <h5 class="mb-0"><img class="me-2" src="/static/images/cashmachine.png" alt="" width="40" />{{ title }}</h5>
+    </div>
+  </div>
+</div>
+<br>
+{% if perms.manager.add_banco %}
+<div class="col-lg-12">
+  <a href="/banco/add/" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
+</div>
+{% endif %}
+<br>
+<!-- Card Header - Accordion -->
+<button class="btn btn-falcon-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter"><span class="fas fa-filter"></span> Filtro</button><br>
+<!-- Card Content - Collapse -->
+<br>
+<div class="card shadow mb-4">
+  <div class="card overflow-hidden collapse" id="collapseFilter">
+      <div class="card-body">
+        <form action="." method="get">
+          <div class="row">
+            {% if request.user.is_staff %}
+            <div class="col-lg-3">
+              {{ form.consistente_cliente|bootstrap }}
+            </div>
+            {% endif %}
+            <div class="col-lg-3">
+              {{ form.nomebanco|bootstrap }}
+            </div>
+            <div class="col-lg-3">
+              {{ form.tipomov|bootstrap }}
+            </div>
+          </div>
+          <br>
+          <div class="col-lg-12">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+          </div>
+        </form>
+      </div>
+  </div>
+</div>
+<div class="card shadow mb-4">
+  <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Dados selecionados</h6>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive scrollbar">
+      <table class="table table-sm table-bordered table-striped fs-10 mb-0" width="100%" cellspacing="0">
+        <thead class="bg-200">
+          <tr>
+            <th scope="col">Banco/Conta</th>
+            <th scope="col">Tipo de Banco</th>
+            <th scope="col">Dia de Vencimento</th>
+            <th scope="col">Gera Fatura?</th>
+            <th scope="col">Tipo da Conta</th>
+            <th scope="col">Data de criação</th>
+            <th scope="col">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for banco in list_banco %}
+          <tr>
+            <th scope="row">{{ banco.nomebanco }}</th>
+            <td>{{ banco.get_tipomov_display }}</td>
+            <td>{{ banco.diavenc|default_if_none:"" }}</td>
+            <td>{% if banco.gerafatura %}<span class="far fa-check-circle"></span>{% else %}<span class="far fa-circle"></span>{% endif %}</td>
+            <td>{{ banco.get_tipoconta_display }}</td>
+            <td>{{ banco.created }}</td>
+            <td>{% if perms.manager.change_banco %}<a href="/banco/{{ banco.id }}/edit/" ><button class="btn btn-info"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

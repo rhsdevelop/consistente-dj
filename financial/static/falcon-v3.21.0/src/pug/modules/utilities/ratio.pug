@@ -1,0 +1,44 @@
+extends ../../layouts/LayoutComponent
+
+append variables
+  -
+    var pageHeader = {
+      title: 'Ratios',
+      description: 'Use generated pseudo elements to make an element maintain the aspect ratio of your choosing. Perfect for responsively handling video or slideshow embeds based on the width of the parent.',
+      url: `https://getbootstrap.com/docs/${bootstrapVersion}/helpers/ratio/`,
+      linkText: 'Ratios on Bootstrap'
+    }
+
+append content
+  +PageHeader(pageHeader)
+
+  +ComponentCard({
+    title: 'Example',
+    anchor:true
+  }).mb-3
+    .ratio.ratio-16x9
+      = '\n'
+      iframe(src='https://www.youtube.com/embed/zpOULjyy-n8?rel=0', allowfullscreen title="YouTube video")
+      = '\n'
+  
+  +ComponentCard({
+    title: 'Aspect ratios',
+    anchor:true
+  })
+    .example-aspect-rarios
+      .ratio.ratio-1x1
+        = '\n'
+        div 1x1
+        = '\n'
+      .ratio.ratio-4x3
+        = '\n'
+        div 4x3
+        = '\n'
+      .ratio.ratio-16x9
+        = '\n'
+        div 16x9
+        = '\n'
+      .ratio.ratio-21x9
+        = '\n'
+        div 21x9
+        = '\n'

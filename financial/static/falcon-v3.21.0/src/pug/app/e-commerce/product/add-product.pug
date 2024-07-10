@@ -1,0 +1,33 @@
+extends ../../../layouts/LayoutFeed
+include ../../../mixins/e-commerce/AddProduct
+
+prepend styles
+  link(href=`${CWD}vendors/choices/choices.min.css`, rel='stylesheet')
+  link(href=`${CWD}vendors/flatpickr/flatpickr.min.css`, rel='stylesheet')
+  link(href=`${CWD}vendors/dropzone/dropzone.css`, rel='stylesheet')
+
+prepend scripts
+  script(src=`${CWD}vendors/tinymce/tinymce.min.js`)
+  script(src=`${CWD}vendors/choices/choices.min.js`)
+  script(src=`${CWD}vendors/flatpickr/flatpickr.min.js`)
+  script(src=`${CWD}vendors/dropzone/dropzone-min.js`)
+
+
+block feedBanner  
+  +AddProductHeader
+
+block feed
+  +BasicInformation
+  +ProductImages
+  +ProductDetails
+  +ProductSpecifications
+
+block feedSideBar
+  +ProductType
+  +ProductTags
+  +ProductPricing
+  +ProductShipping
+  +ProductStock
+
+block feedFooter  
+  +AddProductFooter.mt-3

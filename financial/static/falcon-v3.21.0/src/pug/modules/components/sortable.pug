@@ -1,0 +1,75 @@
+extends ../../layouts/LayoutComponent
+
+append variables
+  
+  -
+    var exampleItems = [
+      {
+        name: 'Doing',
+        items: [
+          {
+            title: 'Add a cookie notice which will be shown in the bottom of the page and have a link of "Privacy Policy"',
+          },
+          {
+            title: 'Add a pdf file that describes all the symptoms of COVID-19',
+          },
+          {
+            title: 'Make a Registration form that include Name, Email and a Password input field',
+          },
+          {
+            title: 'Update profile page layout with cover image and user setting menu',
+          },
+        ]
+      },
+      {
+        name: 'Review',
+        items: [
+          {
+            title: 'Update all the npm packages and also remove the outdated plugins',
+          },
+          {
+            title: 'Add a getting started page that allows users to see the starting process',
+          },
+          { title: 'Review and test all the task and deploy to the server'},
+          { 
+            title: 'Get all the data by API call and show them to the landing page by adding a new section'
+          },
+        ]
+      }
+    ]
+  -
+    var pageHeader = {
+      title: 'Sortable',
+      description: 'Reorderable drag-and-drop lists for modern browsers and touch devices. No jQuery or framework required.',
+      url: 'https://sortablejs.github.io/Sortable/',
+      linkText: 'Sortable Documentation'
+    }
+
+prepend scripts
+  script(src=`${CWD}vendors/sortablejs/Sortable.min.js`)
+
+append content
+  +PageHeader(pageHeader)
+
+  +ComponentCard({
+    title: 'Example',
+    anchor: true,
+    description:`Here is the example of the Multiple Container Sortable feature of the library. We also design <a href="${CWD}${paths['kanban']}">Kanban Board </a>using this Sortable Library. <strong>You can drag any card in between the two columns below:</strong>`,
+    descriptionClass:'mt-2 mb-0'
+  }).mb-3
+    .row
+      each listItems in exampleItems
+        .col-lg-6
+          .border.bg-white.dark__bg-1000.rounded-2.p-3.mb-3(style="max-height: none;" data-sortable)
+            each item in listItems.items
+              .sortable-item-wrapper.dark__bg-1100.mb-3
+                .sortable-item.card.shadow-sm
+                  .card-body
+                    p.fs-10.fw-medium.font-sans-serif.mb-0=item.title  
+
+  .card
+    .card-header
+      h5.mb-0 Javascript
+    .card-body.bg-body-tertiary
+      +ComponentCardLib
+        script(src=`vendors/sortablejs/Sortable.min.js`)

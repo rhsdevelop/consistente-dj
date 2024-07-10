@@ -1,0 +1,50 @@
+extends ../../layouts/LayoutComponent
+
+append variables
+  -
+    var pageHeader = {
+      title: 'Focus ring',
+      description: 'Utility classes that allows you to add and modify custom focus ring styles to elements and components.',
+      url: `https://getbootstrap.com/docs/${bootstrapVersion}/helpers/focus-ring/`,
+      linkText: 'Focus ring on Bootstrap'
+    }
+
+append content
+
+  +PageHeader(pageHeader)
+  +ComponentCard({
+    title: 'Example',
+    description: `The <code>.focus-ring</code> helper removes the default <code>outline</code> on <code>:focus</code>, replacing it with a <code>box-shadow</code> that can be more broadly customized. The new shadow is made up of a series of CSS variables, inherited from the <code>:root</code> level, that can be modified for any element or component.`,
+    anchor:true,
+    descriptionClass:'mt-2'
+  }).mb-3
+    a.d-inline-flex.focus-ring.py-1.px-2.text-decoration-none.border.rounded-2(href='#!') Custom focus ring
+
+  +ComponentCard({
+    title: 'Variants',
+    anchor:true
+  })
+    p.mb-4
+      a.focus-ring.focus-ring-primary.py-1.px-2.text-decoration-none.border.rounded-2(href='#!') Primary focus
+    = '\n'
+    p.mb-4
+      a.focus-ring.focus-ring-secondary.py-1.px-2.text-decoration-none.border.rounded-2(href='#!') Secondary focus
+    = '\n'
+    p.mb-4
+      a.focus-ring.focus-ring-success.py-1.px-2.text-decoration-none.border.rounded-2(href='#!') Success focus
+    = '\n'
+    p.mb-4
+      a.focus-ring.focus-ring-danger.py-1.px-2.text-decoration-none.border.rounded-2(href='#!') Danger focus
+    = '\n'
+    p.mb-4
+      a.focus-ring.focus-ring-warning.py-1.px-2.text-decoration-none.border.rounded-2(href='#!') Warning focus
+    = '\n'
+    p.mb-4
+      a.focus-ring.focus-ring-info.py-1.px-2.text-decoration-none.border.rounded-2(href='#!') Info focus
+    = '\n'
+    p.mb-4
+      a.focus-ring.focus-ring-light.py-1.px-2.text-decoration-none.border.rounded-2(href='#!') Light focus
+    = '\n'
+    p.mb-4
+      a.focus-ring.focus-ring-dark.py-1.px-2.text-decoration-none.border.rounded-2(href='#!') Dark focus
+    = '\n'

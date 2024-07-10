@@ -1,0 +1,29 @@
+extends ../../layouts/LayoutComponent
+
+append variables
+  -
+    var pageHeader = {
+      title: 'Visually hidden',
+      description: 'Use these helpers to visually hide elements but keep them accessible to assistive technologies.',
+      url: `https://getbootstrap.com/docs/${bootstrapVersion}/helpers/visually-hidden/`,
+      linkText: 'Visually hidden on Bootstrap'
+    }
+
+append content
+
+  +PageHeader(pageHeader)
+  +ComponentCard({
+    title: 'Example',
+    description: `Visually hide an element while still allowing it to be exposed to assistive technologies (such as screen readers) with <code>.visually-hidden</code>. Use <code>.visually-hidden-focusable</code> to visually hide an element by default, but to display it when it's focused (e.g. by a keyboard-only user). <code>.visually-hidden-focusable</code> can also be applied to a container–thanks to <code>:focus-within</code>, the container will be displayed when any child element of the container receives focus.`,
+    anchor:true,
+    descriptionClass:'mt-2'
+  })
+    h2.visually-hidden Title for screen readers
+    = '\n'
+    a.visually-hidden-focusable(href="#content") Skip to main content
+    = '\n'
+    .visually-hidden-focusable 
+      | A container with a 
+      = '\n'
+      a(href="#") focusable element.
+      = '\n'

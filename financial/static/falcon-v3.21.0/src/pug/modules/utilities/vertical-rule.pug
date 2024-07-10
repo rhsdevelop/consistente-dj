@@ -1,0 +1,28 @@
+extends ../../layouts/LayoutComponent
+
+append variables
+  -
+    var pageHeader = {
+      title: 'Vertical rule',
+      description: 'Use the custom vertical rule helper to create vertical dividers like the <code>&lt;hr&gt;</code> element.',
+      url: `https://getbootstrap.com/docs/${bootstrapVersion}/helpers/vertical-rule/`,
+      linkText: 'Vertical rule on Bootstrap'
+    }
+
+append content
+
+  +PageHeader(pageHeader)
+
+  +ComponentCard({
+    title: 'Example ',
+    description: 'Vertical rules are inspired by the <code>&lt;hr&gt;</code> element, allowing you to create vertical dividers in common layouts.',
+    anchor:true
+  })
+    .vr.text-400
+    = '\n'
+    p.mt-3 Vertical rules scale their height in flex layouts:
+    = '\n'
+    .d-flex(style="height: 200px")
+      = '\n'
+      .vr.text-400
+      = '\n'

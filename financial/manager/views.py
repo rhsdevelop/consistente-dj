@@ -664,7 +664,10 @@ def list_receber(request):
             value = request.GET.getlist(key)
             filter_search['%s_id__in' % key] = value
     list_receber = Diario.objects.filter(**filter_customer).filter(**filter_search).order_by('datadoc')
-    soma = round(list_receber.aggregate(Sum('valor'))['valor__sum'], 2)
+    try:
+        soma = round(list_receber.aggregate(Sum('valor'))['valor__sum'], 2)
+    except:
+        soma = Decimal('0.00')
     template = loader.get_template('diario/receber/list.html')
     context = {
         'title': 'Contas à Receber',
@@ -833,7 +836,10 @@ def list_pagar(request):
             value = request.GET.getlist(key)
             filter_search['%s_id__in' % key] = value
     list_pagar = Diario.objects.filter(**filter_customer).filter(**filter_search)
-    soma = round(list_pagar.aggregate(Sum('valor'))['valor__sum'], 2)
+    try:
+        soma = round(list_pagar.aggregate(Sum('valor'))['valor__sum'], 2)
+    except:
+        soma = Decimal('0.00')
     template = loader.get_template('diario/pagar/list.html')
     context = {
         'title': 'Contas à Pagar',
@@ -1027,7 +1033,10 @@ def list_transferir(request):
             value = request.GET.getlist(key)
             filter_search['%s_id__in' % key] = value
     list_transfere = Diario.objects.filter(**filter_customer).filter(**filter_search).exclude(descricao='<CRED.CARD>').order_by('datadoc')
-    soma = round(list_transfere.aggregate(Sum('valor'))['valor__sum'], 2)
+    try:
+        soma = round(list_transfere.aggregate(Sum('valor'))['valor__sum'], 2)
+    except:
+        soma = Decimal('0.00')
     list_transferir = []
     for item in list_transfere:
         new_item = {

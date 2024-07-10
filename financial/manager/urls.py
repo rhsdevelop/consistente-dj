@@ -30,4 +30,7 @@ urlpatterns = [
     path('transferir/add/', views.add_transferir, name='add_transferir'),
     path('transferir/list/', views.list_transferir, name='list_transferir'),
     path('transferir/<int:diario_id>/edit/', views.edit_transferir, name='edit_transferir'),
+    #path('transferir/add/', views.add_transferir, name='add_transferir'),
+    path('cartoes/list/', views.list_cartoes, name='list_cartoes'),
+    #path('transferir/<int:diario_id>/edit/', views.edit_transferir, name='edit_transferir'),
 ]

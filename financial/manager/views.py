@@ -1061,3 +1061,78 @@ def list_transferir(request):
         'active_diario_transferir': 'active',
     }
     return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.view_diario')
+def list_cartoes(request):
+    filter_customer = {}
+    filter_search = {}
+    if request.GET:
+        form = FindDiarioForm(request.GET)
+    else:
+        form = FindDiarioForm()
+        filter_search['datadoc__range'] = date.today().replace(day=1), date.today().replace(day=monthrange(date.today().year, date.today().month)[1])
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            filter_customer['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    filter_banco = filter_customer.copy()
+    filter_banco['tipomov__in'] = [0, 1, 3]
+    filter_customer['tipomov__in'] = [4]
+    filter_customer['banco__tipomov__in'] = [0, 1, 3]
+    form.fields['parceiro'].widget = forms.HiddenInput()
+    form.fields['categoria'].widget = forms.HiddenInput()
+    form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    for key, value in request.GET.items():
+        if key in ['consistente_cliente', 'banco'] and value:
+            filter_search[key] = value
+        elif key in ['data_inicial', 'venc_inicial', 'pag_inicial'] and value:
+            chave = {
+                'data_inicial': 'datadoc',
+                'venc_inicial': 'datavenc',
+                'pag_inicial': 'datapago',
+            }
+            filter_search['%s__gte' % chave[key]] = value
+        elif key in ['data_final', 'venc_final', 'pag_final'] and value:
+            chave = {
+                'data_final': 'datadoc',
+                'venc_final': 'datavenc',
+                'pag_final': 'datapago',
+            }
+            filter_search['%s__lte' % chave[key]] = value
+        elif key in ['parceiro', 'categoria'] and value:
+            value = request.GET.getlist(key)
+            filter_search['%s_id__in' % key] = value
+    list_transfere = Diario.objects.filter(**filter_customer).filter(**filter_search).filter(descricao='<CRED.CARD>').order_by('datadoc')
+    try:
+        soma = round(list_transfere.aggregate(Sum('valor'))['valor__sum'], 2)
+    except:
+        soma = Decimal('0.00')
+    list_cartoes = []
+    for item in list_transfere:
+        new_item = {
+            'id': item.id,
+            'datadoc': item.datadoc,
+            'banco': item.banco,
+            'banco_rec': Diario.objects.get(origin_transfer=item.id, tipomov=3).banco,
+            'descricao': item.descricao,
+            'valor': item.valor,
+            'datavenc': item.datavenc,
+            'datapago': item.datapago,
+        }
+        list_cartoes.append(new_item)
+    template = loader.get_template('diario/cartoes/list.html')
+    context = {
+        'title': 'Cartões de Crédito',
+        'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'list_cartoes': list_cartoes,
+        'form': form,
+        'soma': soma,
+        'active_diario': 'show',
+        'active_diario_cartoes': 'active',
+    }
+    return HttpResponse(template.render(context, request))

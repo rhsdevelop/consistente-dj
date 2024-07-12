@@ -12,7 +12,7 @@
 <br>
 {% if perms.manager.add_diario %}
 <div class="col-lg-12">
-  <a href="/pagar/add/" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
+  <a href="/pagar/add/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
 </div>
 {% endif %}
 <br>
@@ -78,7 +78,7 @@
     <p>Valor Total: <b>{{ soma }}</b></p>
   </div>
   <div class="card-body">
-    <div id="tableExample" data-list='{"valueNames":["datadoc","parceiro","descricao","categoria","valor","datavenc","datapag","banco","acoes"],"page":25,"pagination":true}'>
+    <div id="tableExample" data-list='{"valueNames":["datadoc","parceiro","descricao","categoria","valor","situacao","datavenc","datapag","banco","acoes"],"page":25,"pagination":true}'>
       <div class="table-responsive scrollbar">
         <table class="table table-sm table-bordered table-striped fs-10 mb-0">
           <thead class="bg-200">
@@ -88,6 +88,7 @@
               <th class="text-900 sort" data-sort="descricao">Descrição</th>
               <th class="text-900 sort" data-sort="categoria">Categoria</th>
               <th class="text-900 sort" data-sort="valor">Valor</th>
+              <th class="text-900 sort" data-sort="situacao">Situação</th>
               <th class="text-900 sort" data-sort="datavenc">Vence em</th>
               <th class="text-900 sort" data-sort="datapag">Pago em</th>
               <th class="text-900 sort" data-sort="banco">Banco</th>
@@ -102,10 +103,22 @@
               <td class="descricao" >{{ pagar.descricao }}</td>
               <td class="categoria" >{{ pagar.categoria }}</td>
               <td class="valor" >{{ pagar.valor }}</td>
+              <td class="situacao" >
+                {% if pagar.datapago %}
+                <span class="badge badge rounded-pill badge-subtle-success">Pago</span>
+                {% elif pagar.datavenc > hoje %}
+                <span class="badge badge rounded-pill badge-subtle-info">À vencer</span>
+                {% else %}
+                <span class="badge badge rounded-pill badge-subtle-danger">Vencido</span>
+                {% endif %}
+              </td>
               <td class="datavenc" ><span hidden>"{{ pagar.datavenc|date:'Ymd' }}"</span>{{ pagar.datavenc|date:'d/m/Y' }}</td>
               <td class="datapag" ><span hidden>"{{ pagar.datapago|date:'Ymd' }}"</span>{{ pagar.datapago|date:'d/m/Y' }}</td>
               <td class="banco" >{{ pagar.banco }}</td>
-              <td class="acoes" >{% if perms.manager.change_diario %}<a href="/pagar/{{ pagar.id }}/edit/" ><button class="btn btn-info"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
+              <td class="acoes" >
+                {% if perms.manager.change_diario %}<a href="/pagar/{{ pagar.id }}/edit/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-pen"></span></button></a>{% endif %}
+                {% if perms.manager.delete_diario %}<a href="/pagar/{{ pagar.id }}/delete/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja apagar esse registro?');"><span class="fas fa-trash"></span></button></a>{% endif %}
+              </td>
             </tr>
             {% endfor %}
           </tbody>

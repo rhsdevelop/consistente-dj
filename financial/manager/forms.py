@@ -109,6 +109,8 @@ class AddDiarioForm(forms.ModelForm):
         ),
         required=False,
     )
+    parcelas = forms.ChoiceField(choices=[[x, '%sx' % x] for x in range(1, 361)], label='Parcelas', initial=1)
+    recorrencia = forms.BooleanField(label='Pagamento recorrente no mes competente.', initial=False, required=False)
     class Meta:
         model = Diario
         exclude = ['id', 'datafirstupdate', 'datalastupdate', 'tipomov', 'origin_transfer', 'create_user', 'created', 'assign_user', 'modified']
@@ -148,6 +150,7 @@ class FindDiarioForm(forms.Form):
     parceiro = forms.ModelMultipleChoiceField(queryset=Parceiro.objects.all().order_by('nome'), required=False, label='Parceiro')
     categoria = forms.ModelMultipleChoiceField(queryset=Categoria.objects.all().order_by('categoria'), required=False, label='Categoria')
     banco = forms.ModelChoiceField(queryset=Banco.objects.all().order_by('nomebanco'), required=False, label='Banco')
+    banco_rec = forms.ModelChoiceField(queryset=Banco.objects.all().order_by('nomebanco'), required=False, label='Cartão de Crédito')
     data_inicial = forms.DateField(
         label='Data Inicial',
         widget=forms.widgets.DateInput(

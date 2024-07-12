@@ -12,7 +12,7 @@
 <br>
 {% if perms.manager.add_consistentecliente %}
 <div class="col-lg-12">
-  <a href="/cliente/add/" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
+  <a href="/cliente/add/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
 </div>
 {% endif %}
 <br>
@@ -68,7 +68,7 @@
             <td>{{ cliente.doc }}</td>
             <td>{{ cliente.create_user }}</td>
             <td>{{ cliente.created }}</td>
-            <td>{% if perms.manager.change_consistentecliente %}<a href="/cliente/{{ cliente.id }}/edit/" ><button class="btn btn-info"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
+            <td>{% if perms.manager.change_consistentecliente %}<a href="/cliente/{{ cliente.id }}/edit/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
           </tr>
           {% endfor %}
         </tbody>

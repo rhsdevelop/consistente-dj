@@ -12,7 +12,7 @@
 <br>
 {% if perms.manager.add_diario %}
 <div class="col-lg-12">
-  <a href="/transferir/add/" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
+  <a href="/transferir/add/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
 </div>
 {% endif %}
 <br>
@@ -97,7 +97,7 @@
               <td class="valor" >{{ transferir.valor }}</td>
               <td class="datavenc" ><span hidden>"{{ transferir.datavenc|date:'Ymd' }}"</span>{{ transferir.datavenc|date:'d/m/Y' }}</td>
               <td class="datapago" ><span hidden>"{{ transferir.datapago|date:'Ymd' }}"</span>{{ transferir.datapago|date:'d/m/Y' }}</td>
-              <td class="acoes" >{% if perms.manager.change_diario %}<a href="/transferir/{{ transferir.id }}/edit/" ><button class="btn btn-info"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
+              <td class="acoes" >{% if perms.manager.change_diario %}<a href="/transferir/{{ transferir.id }}/edit/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
             </tr>
             {% endfor %}
           </tbody>

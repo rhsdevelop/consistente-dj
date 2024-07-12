@@ -12,7 +12,7 @@
 <br>
 {% if perms.manager.add_categoria %}
 <div class="col-lg-12">
-  <a href="/categoria/add/" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
+  <a href="/categoria/add/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
 </div>
 {% endif %}
 <br>
@@ -71,7 +71,7 @@
               <td class="contempla" >{% if categoria.classifica %}<span class="far fa-check-circle"></span>{% else %}<span class="far fa-circle"></span>{% endif %}</td>
               <td class="criado" >{{ categoria.create_user }}</td>
               <td class="data" >{{ categoria.created }}</td>
-              <td class="acoes" >{% if perms.manager.change_categoria %}<a href="/categoria/{{ categoria.id }}/edit/" ><button class="btn btn-info"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
+              <td class="acoes" >{% if perms.manager.change_categoria %}<a href="/categoria/{{ categoria.id }}/edit/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
             </tr>
             {% endfor %}
           </tbody>

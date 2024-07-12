@@ -12,7 +12,7 @@
 <br>
 {% if perms.manager.add_consistenteusuario %}
 <div class="col-lg-12">
-  <a href="/clienteuser/add/" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
+  <a href="/clienteuser/add/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
 </div>
 {% endif %}
 <br>
@@ -65,7 +65,7 @@
             <td>{% if usuario.is_admin %}<span class="far fa-check-circle"></span>{% else %}<span class="far fa-circle"></span>{% endif %}</td>
             <td>{{ usuario.create_user }}</td>
             <td>{{ usuario.created }}</td>
-            <td>{% if perms.manager.change_consistenteusuario %}<a href="/clienteuser/{{ usuario.id }}/edit/" ><button class="btn btn-info"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
+            <td>{% if perms.manager.change_consistenteusuario %}<a href="/clienteuser/{{ usuario.id }}/edit/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
           </tr>
           {% endfor %}
         </tbody>

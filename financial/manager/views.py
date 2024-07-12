@@ -36,12 +36,17 @@ def add_cliente(request):
         item.assign_user = request.user
         item.save()
         messages.success(request, 'Registro adicionado com sucesso.')
-        return redirect('/cliente/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/cliente/list')
     form = AddClienteForm()
     template = loader.get_template('cliente/add.html')
     context = {
         'title': 'Adicionar Novo Cliente',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_register_cliente': 'active',
     }
@@ -69,12 +74,17 @@ def edit_cliente(request, cliente_id):
         item.assign_user = request.user
         item.save()
         messages.success(request, 'Registro alterado com sucesso.')
-        return redirect('/cliente/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/cliente/list')
     form = AddClienteForm(instance=cliente)
     template = loader.get_template('cliente/edit.html')
     context = {
         'title': 'Dados da clienteregação Selecionada',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_register_cliente': 'active',
     }
@@ -120,12 +130,17 @@ def add_clienteuser(request):
         item.assign_user = request.user
         item.save()
         messages.success(request, 'Registro adicionado com sucesso.')
-        return redirect('/clienteuser/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/clienteuser/list')
     form = AddClienteUserForm()
     template = loader.get_template('clienteuser/add.html')
     context = {
         'title': 'Adicionar Novo Cliente',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_register_clienteuser': 'active',
     }
@@ -153,12 +168,17 @@ def edit_clienteuser(request, usuario_id):
         item.assign_user = request.user
         item.save()
         messages.success(request, 'Registro alterado com sucesso.')
-        return redirect('/clienteuser/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/clienteuser/list')
     form = AddClienteUserForm(instance=clienteuser)
     template = loader.get_template('clienteuser/edit.html')
     context = {
         'title': 'Dados da clienteregação Selecionada',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_register_clienteuser': 'active',
     }
@@ -215,7 +235,11 @@ def add_banco(request):
             messages.success(request, 'Registro adicionado com sucesso.')
         else:
             messages.error(request, form.errors)
-        return redirect('/banco/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/banco/list')
     form = AddBancoForm()
     if not request.user.is_staff:
         crc_user = ConsistenteUsuario.objects.filter(user=request.user)
@@ -230,6 +254,7 @@ def add_banco(request):
     context = {
         'title': 'Cadastro de Bancos',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_register_banco': 'active',
     }
@@ -257,7 +282,11 @@ def edit_banco(request, banco_id):
         for usuariobanco in request.POST.getlist('allowed_users'):
             item.allowed_users.add(usuariobanco)
         messages.success(request, 'Registro alterado com sucesso.')
-        return redirect('/banco/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/banco/list')
     form = AddBancoForm(instance=banco)
     if not request.user.is_staff:
         usuarios = [x.user_id for x in ConsistenteUsuario.objects.filter(consistente_cliente_id=crc_user.first().consistente_cliente_id)]
@@ -267,6 +296,7 @@ def edit_banco(request, banco_id):
     context = {
         'title': 'Cadastro de Bancos',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_register_banco': 'active',
     }
@@ -294,7 +324,7 @@ def list_banco(request):
             filter_search[key] = value
         if key in ['nomebanco', 'tipomov', 'doc'] and value:
             filter_search['%s__icontains' % key] = value
-    list_banco = Banco.objects.filter(**filter_search)
+    list_banco = Banco.objects.filter(**filter_search).order_by('nomebanco')
     template = loader.get_template('banco/list.html')
     context = {
         'title': 'Cadastro de Bancos',
@@ -322,7 +352,11 @@ def add_categoria(request):
         item.assign_user = request.user
         item.save()
         messages.success(request, 'Registro adicionado com sucesso.')
-        return redirect('/categoria/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/categoria/list')
     form = AddCategoriaForm()
     if not request.user.is_staff:
         crc_user = ConsistenteUsuario.objects.filter(user=request.user)
@@ -335,6 +369,7 @@ def add_categoria(request):
     context = {
         'title': 'Cadastro de Categorias',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_register_categoria': 'active',
     }
@@ -359,7 +394,11 @@ def edit_categoria(request, categoria_id):
         item.assign_user = request.user
         item.save()
         messages.success(request, 'Registro alterado com sucesso.')
-        return redirect('/categoria/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/categoria/list')
     form = AddCategoriaForm(instance=categoria)
     if not request.user.is_staff:
         form.fields['consistente_cliente'].widget = forms.HiddenInput()
@@ -367,6 +406,7 @@ def edit_categoria(request, categoria_id):
     context = {
         'title': 'Cadastro de Categorias',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_register_categoria': 'active',
     }
@@ -394,7 +434,7 @@ def list_categoria(request):
             filter_search[key] = value
         if key in ['categoria', 'tipomov', 'doc'] and value:
             filter_search['%s__icontains' % key] = value
-    list_categoria = Categoria.objects.filter(**filter_search)
+    list_categoria = Categoria.objects.filter(**filter_search).order_by('categoria')
     template = loader.get_template('categoria/list.html')
     context = {
         'title': 'Cadastro de Categorias',
@@ -422,7 +462,11 @@ def add_parceiro(request):
         item.assign_user = request.user
         item.save()
         messages.success(request, 'Registro adicionado com sucesso.')
-        return redirect('/parceiro/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/parceiro/list')
     form = AddParceiroForm()
     if not request.user.is_staff:
         crc_user = ConsistenteUsuario.objects.filter(user=request.user)
@@ -435,6 +479,7 @@ def add_parceiro(request):
     context = {
         'title': 'Cadastro de Parceiros',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_register_parceiro': 'active',
     }
@@ -459,7 +504,11 @@ def edit_parceiro(request, parceiro_id):
         item.assign_user = request.user
         item.save()
         messages.success(request, 'Registro alterado com sucesso.')
-        return redirect('/parceiro/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/parceiro/list')
     form = AddParceiroForm(instance=parceiro)
     if not request.user.is_staff:
         form.fields['consistente_cliente'].widget = forms.HiddenInput()
@@ -467,6 +516,7 @@ def edit_parceiro(request, parceiro_id):
     context = {
         'title': 'Cadastro de Parceiros',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_register_parceiro': 'active',
     }
@@ -497,7 +547,7 @@ def list_parceiro(request):
             filter_search[key] = value
         if key in ['nomeparceiro', 'tipomov', 'doc'] and value:
             filter_search['%s__icontains' % key] = value
-    list_parceiro = Parceiro.objects.filter(**filter_search)
+    list_parceiro = Parceiro.objects.filter(**filter_search).order_by('nome')
     template = loader.get_template('parceiro/list.html')
     context = {
         'title': 'Cadastro de Parceiros',
@@ -516,6 +566,8 @@ def add_receber(request):
         form = AddDiarioForm(request.POST)
         if not request.user.is_staff:
             del form.fields['consistente_cliente']
+        del form.fields['parcelas']
+        del form.fields['recorrencia']
         if form.is_valid():
             item = form.save(commit=False)
             if not request.user.is_staff:
@@ -529,7 +581,11 @@ def add_receber(request):
             messages.success(request, 'Registro adicionado com sucesso.')
         else:
             messages.error(request, form.errors)
-        return redirect('/receber/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/receber/list')
     filter_customer = {}
     form = AddDiarioForm()
     if not request.user.is_staff:
@@ -555,6 +611,7 @@ def add_receber(request):
     context = {
         'title': 'Contas à Receber',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_diario': 'show',
         'active_diario_receber': 'active',
@@ -576,6 +633,8 @@ def edit_receber(request, diario_id):
         receber = Diario.objects.get(id=diario_id)
     if request.POST:
         form = AddDiarioForm(request.POST, instance=receber)
+        del form.fields['parcelas']
+        del form.fields['recorrencia']
         if not request.user.is_staff:
             del form.fields['consistente_cliente']
         if form.is_valid():
@@ -585,7 +644,11 @@ def edit_receber(request, diario_id):
             messages.success(request, 'Registro alterado com sucesso.')
         else:
             messages.error(request, form.errors)
-        return redirect('/receber/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/receber/list')
     filter_customer = {}
     form = AddDiarioForm(instance=receber)
     if not request.user.is_staff:
@@ -609,6 +672,7 @@ def edit_receber(request, diario_id):
     context = {
         'title': 'Contas à Receber',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_diario': 'show',
         'active_diario_receber': 'active',
@@ -698,10 +762,54 @@ def add_pagar(request):
             item.assign_user = request.user
             item.tipomov = 1
             item.save()
+            if int(request.POST['parcelas']) > 1:
+                origin = dict(Diario.objects.filter(id=item.id).values()[0])
+                if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                    pass
+                else:
+                    item.descricao += ' 1/%s' % request.POST['parcelas']
+                    item.origin_transfer = item.id
+                item.save()
+                del origin['id']
+                origin['datapago'] = None
+                datavenc = origin['datavenc']
+                datadoc = origin['datadoc']
+                for i in range(2, int(request.POST['parcelas']) + 1):
+                    year = datavenc.year
+                    month = datavenc.month + 1
+                    day = origin['datavenc'].day
+                    if month == 13:
+                        year += 1
+                        month = 1
+                    if day > monthrange(year, month)[1]:
+                        day = monthrange(year, month)[1]
+                    datavenc = datavenc.replace(year=year, month=month, day=day)
+                    if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                        year = datadoc.year
+                        month = datadoc.month + 1
+                        day = origin['datadoc'].day
+                        if month == 13:
+                            year += 1
+                            month = 1
+                        if day > monthrange(year, month)[1]:
+                            day = monthrange(year, month)[1]
+                        datadoc = datadoc.replace(year=year, month=month, day=day)
+                    new_item = origin.copy()
+                    new_item['datavenc'] = datavenc
+                    if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                        new_item['datadoc'] = datadoc
+                    else:
+                        new_item['descricao'] += ' %s/%s' % (i, request.POST['parcelas'])
+                        new_item['origin_transfer'] = item.id
+                    resp = Diario.objects.create(**new_item)
             messages.success(request, 'Registro adicionado com sucesso.')
         else:
             messages.error(request, form.errors)
-        return redirect('/pagar/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/pagar/list')
     filter_customer = {}
     form = AddDiarioForm()
     if not request.user.is_staff:
@@ -717,7 +825,7 @@ def add_pagar(request):
     filter_categoria = filter_customer.copy()
     filter_categoria['tipomov'] = 1
     filter_banco = filter_customer.copy()
-    filter_banco['tipomov__in'] = [0, 1, 3]
+    #filter_banco['tipomov__in'] = [0, 1, 3]
     form.fields['parceiro'].queryset = Parceiro.objects.filter(**filter_parceiro).order_by('nome')
     form.fields['categoria'].queryset = Categoria.objects.filter(**filter_categoria).order_by('categoria')
     form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
@@ -727,11 +835,41 @@ def add_pagar(request):
     context = {
         'title': 'Contas à Pagar',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_diario': 'show',
         'active_diario_pagar': 'active',
     }
     return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.delete_diario')
+def delete_pagar(request, diario_id):
+    diario = Diario.objects.filter(pk=diario_id, tipomov=1, datapago=None)
+    if diario:
+        # Verificar se tem múltiplos.
+        if diario[0].origin_transfer:
+            multiple = Diario.objects.filter(origin_transfer=diario[0].origin_transfer, tipomov=1, datapago=None)
+            s = ''
+            foi = 'i'
+            qt = len(multiple)
+            if qt > 1:
+                s = 's'
+                foi = 'ram'
+            multiple.delete()
+            messages.success(request, 'Documento%s apagado%s com sucesso! Pagamento parcelado, fo%s apagado%s %s documento%s.' % (s, s, foi, s, qt, s))
+            len(multiple)
+        else:
+            diario.delete()
+            messages.success(request, 'Documento apagado com sucesso!')
+    else:
+        messages.warning(request, 'Não é possível apagar esse documento. Favor, verifique se está pago.')
+    path = request.GET.get('from', None)
+    if path:
+        return redirect(path)
+    else:
+        return redirect('/pagar/list')
 
 
 @login_required
@@ -748,6 +886,8 @@ def edit_pagar(request, diario_id):
         pagar = Diario.objects.get(id=diario_id)
     if request.POST:
         form = AddDiarioForm(request.POST, instance=pagar)
+        del form.fields['parcelas']
+        del form.fields['recorrencia']
         if not request.user.is_staff:
             del form.fields['consistente_cliente']
         if form.is_valid():
@@ -757,7 +897,11 @@ def edit_pagar(request, diario_id):
             messages.success(request, 'Registro alterado com sucesso.')
         else:
             messages.error(request, form.errors)
-        return redirect('/pagar/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/pagar/list')
     filter_customer = {}
     form = AddDiarioForm(instance=pagar)
     if not request.user.is_staff:
@@ -781,6 +925,7 @@ def edit_pagar(request, diario_id):
     context = {
         'title': 'Contas à Pagar',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_diario': 'show',
         'active_diario_pagar': 'active',
@@ -845,6 +990,7 @@ def list_pagar(request):
         'title': 'Contas à Pagar',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
         'list_pagar': list_pagar,
+        'hoje': date.today(),
         'form': form,
         'soma': soma,
         'active_diario': 'show',
@@ -889,7 +1035,11 @@ def add_transferir(request):
                 messages.error(request, str(err))
         else:
             messages.error(request, form.errors)
-        return redirect('/transferir/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/transferir/list')
     filter_customer = {}
     form = TransfereDiarioForm()
     if not request.user.is_staff:
@@ -914,6 +1064,7 @@ def add_transferir(request):
     context = {
         'title': 'Transferências entre Contas',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_diario': 'show',
         'active_diario_transferir': 'active',
@@ -955,7 +1106,11 @@ def edit_transferir(request, diario_id):
             messages.success(request, 'Registro alterado com sucesso.')
         else:
             messages.error(request, form.errors)
-        return redirect('/transferir/list')
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/transferir/list')
     filter_customer = {}
     form = TransfereDiarioForm(instance=transferir)
     if not request.user.is_staff:
@@ -981,6 +1136,7 @@ def edit_transferir(request, diario_id):
     context = {
         'title': 'Transferências entre Contas',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
         'form': form,
         'active_diario': 'show',
         'active_diario_transferir': 'active',
@@ -1064,6 +1220,78 @@ def list_transferir(request):
 
 
 @login_required
+@permission_required('manager.change_diario')
+def edit_cartoes(request, diario_id):
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            cartoes = Diario.objects.get(id=diario_id, consistente_cliente_id=crc_user.first().consistente_cliente_id)
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    else:
+        cartoes = Diario.objects.get(id=diario_id)
+    cartoes_rec = Diario.objects.get(origin_transfer=diario_id)
+    if request.POST:
+        form = TransfereDiarioForm(request.POST, instance=cartoes)
+        if not request.user.is_staff:
+            del form.fields['consistente_cliente']
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.assign_user = request.user
+            item.save()
+            cartoes_rec.consistente_cliente_id = cartoes.consistente_cliente_id
+            cartoes_rec.datadoc = request.POST['datadoc']
+            cartoes_rec.datavenc = request.POST['datavenc']
+            if 'datapago' in request.POST and request.POST['datapago']:
+                cartoes_rec.datapago = request.POST['datapago']
+            cartoes_rec.descricao = request.POST['descricao']
+            cartoes_rec.valor = request.POST['valor']
+            cartoes_rec.assign_user_id = request.user
+            cartoes_rec.banco_id = request.POST['banco_rec']
+            cartoes_rec.save()
+            messages.success(request, 'Registro alterado com sucesso.')
+        else:
+            messages.error(request, form.errors)
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/cartoes/list')
+    filter_customer = {}
+    form = TransfereDiarioForm(instance=cartoes)
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            form.fields['consistente_cliente'].widget = forms.HiddenInput()
+            filter_customer['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    filter_parceiro = filter_customer.copy()
+    filter_parceiro['modo__in'] = [0, 2]
+    filter_categoria = filter_customer.copy()
+    filter_categoria['tipomov'] = 1
+    filter_banco = filter_customer.copy()
+    filter_banco['tipomov__in'] = [0, 1, 3]
+    form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    form.fields['banco_rec'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    form.fields['banco_rec'].initial = cartoes_rec.banco
+    form.fields['datadoc'].initial = str(date.today())
+    form.fields['datavenc'].initial = str(date.today())
+    template = loader.get_template('diario/cartoes/edit.html')
+    context = {
+        'title': 'Cartões de Crédito',
+        'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
+        'form': form,
+        'active_diario': 'show',
+        'active_diario_cartoes': 'active',
+    }
+    return HttpResponse(template.render(context, request))
+
+
+@login_required
 @permission_required('manager.view_diario')
 def list_cartoes(request):
     filter_customer = {}
@@ -1087,6 +1315,8 @@ def list_cartoes(request):
     form.fields['parceiro'].widget = forms.HiddenInput()
     form.fields['categoria'].widget = forms.HiddenInput()
     form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    filter_banco['tipomov__in'] = [2]
+    form.fields['banco_rec'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
     for key, value in request.GET.items():
         if key in ['consistente_cliente', 'banco'] and value:
             filter_search[key] = value
@@ -1107,6 +1337,14 @@ def list_cartoes(request):
         elif key in ['parceiro', 'categoria'] and value:
             value = request.GET.getlist(key)
             filter_search['%s_id__in' % key] = value
+        if key in ['banco_rec'] and value:
+            filter_cartao = filter_search.copy()
+            filter_cartao['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+            filter_cartao['tipomov__in'] = [3]
+            filter_cartao['banco_id'] = value
+            print(filter_cartao)
+            cartao = [x.origin_transfer for x in Diario.objects.filter(**filter_cartao).filter(descricao='<CRED.CARD>').order_by('datadoc')]
+            filter_search['id__in'] = cartao
     list_transfere = Diario.objects.filter(**filter_customer).filter(**filter_search).filter(descricao='<CRED.CARD>').order_by('datadoc')
     try:
         soma = round(list_transfere.aggregate(Sum('valor'))['valor__sum'], 2)

@@ -10,12 +10,14 @@
   </div>
 </div>
 <br>
+<!--
 {% if perms.manager.add_diario %}
 <div class="col-lg-12">
-  <a href="/cartoes/add/" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
+  <a href="/cartoes/add/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-plus"></span> Adicionar </button></a>
 </div>
 {% endif %}
 <br>
+-->
 <!-- Card Header - Accordion -->
 <button class="btn btn-falcon-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter"><span class="fas fa-filter"></span> Filtro</button><br>
 <!-- Card Content - Collapse -->
@@ -46,6 +48,9 @@
             <div class="col-lg-3">
               {{ form.banco|bootstrap }}
             </div>
+            <div class="col-lg-3">
+              {{ form.banco_rec|bootstrap }}
+            </div>
             {% if request.user.is_staff %}
             <div class="col-lg-3">
               {{ form.consistente_cliente|bootstrap }}
@@ -72,15 +77,14 @@
     <p>Valor Total: <b>{{ soma }}</b></p>
   </div>
   <div class="card-body">
-    <div id="tableExample" data-list='{"valueNames":["datadoc","banco","banco_rec","descricao","valor","datavenc","datapago","acoes"],"page":25,"pagination":true}'>
+    <div id="tableExample" data-list='{"valueNames":["datadoc","banco","banco_rec","valor","datavenc","datapago","acoes"],"page":25,"pagination":true}'>
       <div class="table-responsive scrollbar">
         <table class="table table-sm table-bordered table-striped fs-10 mb-0">
           <thead class="bg-200">
             <tr>
               <th class="text-900 sort" data-sort="datadoc">Data</th>
-              <th class="text-900 sort" data-sort="banco">De banco</th>
-              <th class="text-900 sort" data-sort="banco_rec">Para banco</th>
-              <th class="text-900 sort" data-sort="descricao">Descrição</th>
+              <th class="text-900 sort" data-sort="banco">Banco pagador</th>
+              <th class="text-900 sort" data-sort="banco_rec">Cartão de crédito</th>
               <th class="text-900 sort" data-sort="valor">Valor</th>
               <th class="text-900 sort" data-sort="datavenc">Vence em</th>
               <th class="text-900 sort" data-sort="datapago">Pago em</th>
@@ -93,11 +97,10 @@
               <th class="datadoc" scope="row"><span hidden>{{ cartoes.datadoc|date:'Ymd' }}</span>{{ cartoes.datadoc|date:'d/m/Y' }}</th>
               <td class="banco" >{{ cartoes.banco }}</td>
               <td class="banco_rec" >{{ cartoes.banco_rec }}</td>
-              <td class="descricao" >{{ cartoes.descricao }}</td>
               <td class="valor" >{{ cartoes.valor }}</td>
               <td class="datavenc" ><span hidden>"{{ cartoes.datavenc|date:'Ymd' }}"</span>{{ cartoes.datavenc|date:'d/m/Y' }}</td>
               <td class="datapago" ><span hidden>"{{ cartoes.datapago|date:'Ymd' }}"</span>{{ cartoes.datapago|date:'d/m/Y' }}</td>
-              <td class="acoes" >{% if perms.manager.change_diario %}<a href="/cartoes/{{ cartoes.id }}/edit/" ><button class="btn btn-info"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
+              <td class="acoes" >{% if perms.manager.change_diario %}<a href="/cartoes/{{ cartoes.id }}/edit/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
             </tr>
             {% endfor %}
           </tbody>

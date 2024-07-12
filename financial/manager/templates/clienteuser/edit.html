@@ -19,7 +19,7 @@
         <h5>Preencher dados da conta editada.</h5>
         <br>
         <div>
-          <form action="." class="form-horizontal" method="post">
+          <form action=".{% if from %}?next={{ from|urlencode }}{% endif %}" class="form-horizontal" method="post">
             <div class="row">
               {% csrf_token %}
               <div class="col-lg-6">

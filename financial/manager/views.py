@@ -1,3 +1,4 @@
+import json
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from calendar import monthrange
@@ -13,6 +14,7 @@ from django.template import loader
 
 from .forms import *
 from .models import *
+from .helpers import atualiza_cartao
 
 @login_required
 def index(request):
@@ -748,8 +750,51 @@ def list_receber(request):
 @login_required
 @permission_required('manager.add_diario')
 def add_pagar(request):
+    if request.GET and 'banco' in request.GET and request.GET['banco']:
+        CHOICES = {'cartao': False}
+        new_fat = ''
+        new_venc = str(date.today())
+        banco = Banco.objects.get(id=request.GET['banco'])
+        CHOICES['fatura'] = ''
+        if banco.tipomov == 2 and banco.diavenc:
+            if 'fatura' in request.GET and request.GET['fatura']:
+                # Busca somente vencimento
+                date_ref = request.GET['fatura']
+                new_fat = ''
+                new_venc = ''
+                date_ref = date_ref.split('-')
+                if len(date_ref) == 2:
+                    year = range(date.today().year - 10, date.today().year + 10)
+                    month = range(1, 13)
+                    if int(date_ref[0]) in year and int(date_ref[1]) in month:
+                        # Corrigir se fatura acima do dia 28! Bug visto em 27/01/2020.
+                        new_fat = '-'.join(date_ref)
+                        new_venc = date(int(date_ref[0]), int(date_ref[1]), banco.diavenc).strftime('%Y-%m-%d')
+            else:
+                # Busca fatura e vencimento
+                hoje = datetime.strptime(request.GET['datadoc'], '%Y-%m-%d') + timedelta(days=10)
+                dia = hoje.day
+                mes = hoje.month
+                ano = hoje.year
+                if banco.diavenc < dia:
+                    mes = mes + 1
+                    if mes == 13:
+                        mes = 1
+                        ano += 1
+                new_fat = str(ano) + '-' + str(mes).zfill(2)
+                new_venc = date(ano, mes, banco.diavenc).strftime('%Y-%m-%d')
+            CHOICES['cartao'] = True
+        CHOICES['fatura'] = new_fat
+        CHOICES['datavenc'] = new_venc
+        json_string = json.dumps(CHOICES)
+        return HttpResponse(json_string)
     if request.POST:
-        form = AddDiarioForm(request.POST)
+        request_post = request.POST.copy()
+        if not 'datavenc' in request_post:
+            banco_venc = Banco.objects.get(id=request_post['banco'])
+            request_post['datavenc'] = request_post['fatura'] + '-%s' % str(banco_venc.diavenc).zfill(2)
+        form = AddDiarioForm(request_post)
+        form.fields['datavenc'].widget.attrs['readonly'] = False
         if not request.user.is_staff:
             del form.fields['consistente_cliente']
         if form.is_valid():
@@ -762,6 +807,17 @@ def add_pagar(request):
             item.assign_user = request.user
             item.tipomov = 1
             item.save()
+            # Rotina pra incluir valor em fatura de cartão de crédito
+            if item.banco.tipomov == 2 and item.banco.diavenc and item.fatura:
+                dados_cartao = {
+                    'consistente_cliente': item.consistente_cliente, 
+                    'user': request.user, 
+                    'fatura': item.fatura, 
+                    'banco': item.banco, 
+                    'datavenc': item.datavenc,
+                }
+                atualiza_cartao(**dados_cartao)
+            #########
             if int(request.POST['parcelas']) > 1:
                 origin = dict(Diario.objects.filter(id=item.id).values()[0])
                 if 'recorrencia' in request.POST and request.POST['recorrencia']:
@@ -774,6 +830,7 @@ def add_pagar(request):
                 origin['datapago'] = None
                 datavenc = origin['datavenc']
                 datadoc = origin['datadoc']
+                fatura = origin['fatura']
                 for i in range(2, int(request.POST['parcelas']) + 1):
                     year = datavenc.year
                     month = datavenc.month + 1
@@ -796,12 +853,23 @@ def add_pagar(request):
                         datadoc = datadoc.replace(year=year, month=month, day=day)
                     new_item = origin.copy()
                     new_item['datavenc'] = datavenc
+                    new_item['fatura'] = str(datavenc)[:7]
                     if 'recorrencia' in request.POST and request.POST['recorrencia']:
                         new_item['datadoc'] = datadoc
                     else:
                         new_item['descricao'] += ' %s/%s' % (i, request.POST['parcelas'])
                         new_item['origin_transfer'] = item.id
                     resp = Diario.objects.create(**new_item)
+                    # Rotina pra incluir valor em fatura de cartão de crédito
+                    if resp.banco.tipomov == 2 and resp.banco.diavenc and resp.fatura:
+                        dados_cartao = {
+                            'consistente_cliente': resp.consistente_cliente, 
+                            'user': request.user, 
+                            'fatura': resp.fatura, 
+                            'banco': resp.banco, 
+                            'datavenc': resp.datavenc,
+                        }
+                        atualiza_cartao(**dados_cartao)
             messages.success(request, 'Registro adicionado com sucesso.')
         else:
             messages.error(request, form.errors)
@@ -831,6 +899,7 @@ def add_pagar(request):
     form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
     form.fields['datadoc'].initial = str(date.today())
     form.fields['datavenc'].initial = str(date.today())
+    form.fields['fatura'].widget.attrs['disabled'] = True
     template = loader.get_template('diario/pagar/add.html')
     context = {
         'title': 'Contas à Pagar',
@@ -857,11 +926,44 @@ def delete_pagar(request, diario_id):
             if qt > 1:
                 s = 's'
                 foi = 'ram'
-            multiple.delete()
+            for item in multiple:
+                consistente_cliente = item.consistente_cliente
+                banco = item.banco
+                tipomov = item.banco.tipomov
+                diavenc = item.banco.diavenc
+                datavenc = item.datavenc
+                fatura = item.fatura
+                item.delete()
+                if tipomov == 2 and diavenc and fatura:
+                    dados_cartao = {
+                        'user': request.user,
+                        'consistente_cliente': consistente_cliente, 
+                        'fatura': fatura,
+                        'banco': banco,
+                        'datavenc': datavenc,
+                    }
+                    atualiza_cartao(**dados_cartao)
+            #multiple.delete()
             messages.success(request, 'Documento%s apagado%s com sucesso! Pagamento parcelado, fo%s apagado%s %s documento%s.' % (s, s, foi, s, qt, s))
-            len(multiple)
         else:
-            diario.delete()
+            item = diario[0]
+            consistente_cliente = item.consistente_cliente
+            banco = item.banco
+            tipomov = item.banco.tipomov
+            diavenc = item.banco.diavenc
+            datavenc = item.datavenc
+            fatura = item.fatura
+            item.delete()
+            if tipomov == 2 and diavenc and fatura:
+                dados_cartao = {
+                    'user': request.user,
+                    'consistente_cliente': consistente_cliente, 
+                    'fatura': fatura,
+                    'banco': banco,
+                    'datavenc': datavenc,
+                }
+                atualiza_cartao(**dados_cartao)
+            #diario.delete()
             messages.success(request, 'Documento apagado com sucesso!')
     else:
         messages.warning(request, 'Não é possível apagar esse documento. Favor, verifique se está pago.')
@@ -884,8 +986,21 @@ def edit_pagar(request, diario_id):
             return redirect('/')
     else:
         pagar = Diario.objects.get(id=diario_id)
+    # Rotina pra alterar fatura de cartão de crédito em caso de alteração de banco.
+    banco_antes = None
+    if pagar.banco.tipomov == 2 and pagar.banco.diavenc and pagar.fatura:
+        banco_antes = pagar.banco
+        tipomov_antes = pagar.banco.tipomov
+        diavenc_antes = pagar.banco.diavenc
+        datavenc_antes = pagar.datavenc
+        fatura_antes = pagar.fatura
+    #########
     if request.POST:
-        form = AddDiarioForm(request.POST, instance=pagar)
+        request_post = request.POST.copy()
+        if not 'datavenc' in request_post:
+            banco_venc = Banco.objects.get(id=request_post['banco'])
+            request_post['datavenc'] = request_post['fatura'] + '-%s' % str(banco_venc.diavenc).zfill(2)
+        form = AddDiarioForm(request_post, instance=pagar)
         del form.fields['parcelas']
         del form.fields['recorrencia']
         if not request.user.is_staff:
@@ -894,6 +1009,27 @@ def edit_pagar(request, diario_id):
             item = form.save(commit=False)
             item.assign_user = request.user
             item.save()
+            # Rotina pra incluir valor em fatura de cartão de crédito
+            if item.banco.tipomov == 2 and item.banco.diavenc and item.fatura:
+                dados_cartao = {
+                    'consistente_cliente': item.banco.consistente_cliente,
+                    'user': request.user,
+                    'fatura': item.fatura,
+                    'banco': item.banco,
+                    'datavenc': item.datavenc,
+                }
+                atualiza_cartao(**dados_cartao)
+            if banco_antes:
+                if banco_antes != item.banco or fatura_antes != item.fatura:
+                    dados_cartao = {
+                        'consistente_cliente': banco_antes.consistente_cliente,
+                        'user': request.user,
+                        'fatura': fatura_antes,
+                        'banco': banco_antes,
+                        'datavenc': datavenc_antes,
+                    }
+                    atualiza_cartao(**dados_cartao)
+            #########
             messages.success(request, 'Registro alterado com sucesso.')
         else:
             messages.error(request, form.errors)
@@ -921,10 +1057,27 @@ def edit_pagar(request, diario_id):
     form.fields['parceiro'].queryset = Parceiro.objects.filter(**filter_parceiro).order_by('nome')
     form.fields['categoria'].queryset = Categoria.objects.filter(**filter_categoria).order_by('categoria')
     form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    voltar = False
+    if pagar.fatura:
+        form.fields['datavenc'].widget.attrs['disabled'] = True
+        form.fields['datapago'].widget.attrs['disabled'] = True
+        if pagar.banco.tipomov == 2 and pagar.datapago and pagar.fatura:
+            messages.info(request, 'Pagamento já realizado. Não é possível fazer modificações.')
+            form.fields['datadoc'].widget.attrs['disabled'] = True
+            form.fields['parceiro'].widget.attrs['disabled'] = True
+            form.fields['banco'].widget.attrs['disabled'] = True
+            form.fields['fatura'].widget.attrs['disabled'] = True
+            form.fields['categoria'].widget.attrs['disabled'] = True
+            form.fields['descricao'].widget.attrs['disabled'] = True
+            form.fields['valor'].widget.attrs['disabled'] = True
+            voltar = True
+    else:
+        form.fields['fatura'].widget.attrs['disabled'] = True
     template = loader.get_template('diario/pagar/edit.html')
     context = {
         'title': 'Contas à Pagar',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'voltar': voltar,
         'from': request.GET.get('from', None),
         'form': form,
         'active_diario': 'show',
@@ -1236,20 +1389,25 @@ def edit_cartoes(request, diario_id):
         form = TransfereDiarioForm(request.POST, instance=cartoes)
         if not request.user.is_staff:
             del form.fields['consistente_cliente']
+        del form.fields['datadoc']
+        del form.fields['descricao']
+        del form.fields['valor']
+        del form.fields['datavenc']
+        del form.fields['banco_rec']
         if form.is_valid():
             item = form.save(commit=False)
             item.assign_user = request.user
             item.save()
-            cartoes_rec.consistente_cliente_id = cartoes.consistente_cliente_id
-            cartoes_rec.datadoc = request.POST['datadoc']
-            cartoes_rec.datavenc = request.POST['datavenc']
             if 'datapago' in request.POST and request.POST['datapago']:
                 cartoes_rec.datapago = request.POST['datapago']
-            cartoes_rec.descricao = request.POST['descricao']
-            cartoes_rec.valor = request.POST['valor']
+            else:
+                cartoes_rec.datapago = None
             cartoes_rec.assign_user_id = request.user
-            cartoes_rec.banco_id = request.POST['banco_rec']
             cartoes_rec.save()
+            cartoes_pago = Diario.objects.get(id=diario_id)
+            cartoes_pago.datapago = cartoes_rec.datapago
+            cartoes_pago.save()
+            pagar = Diario.objects.filter(fatura=cartoes_rec.fatura, banco=cartoes_rec.banco, tipomov=1).update(datapago=cartoes_rec.datapago)
             messages.success(request, 'Registro alterado com sucesso.')
         else:
             messages.error(request, form.errors)
@@ -1275,10 +1433,16 @@ def edit_cartoes(request, diario_id):
     filter_banco = filter_customer.copy()
     filter_banco['tipomov__in'] = [0, 1, 3]
     form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    filter_banco['tipomov__in'] = [2]
     form.fields['banco_rec'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
     form.fields['banco_rec'].initial = cartoes_rec.banco
+    form.fields['banco_rec'].label = 'Cartão de Crédito'
+    form.fields['banco_rec'].widget.attrs['disabled'] = True
     form.fields['datadoc'].initial = str(date.today())
+    form.fields['datadoc'].widget.attrs['disabled'] = True
     form.fields['datavenc'].initial = str(date.today())
+    form.fields['datavenc'].widget.attrs['disabled'] = True
+    form.fields['valor'].widget.attrs['disabled'] = True
     template = loader.get_template('diario/cartoes/edit.html')
     context = {
         'title': 'Cartões de Crédito',

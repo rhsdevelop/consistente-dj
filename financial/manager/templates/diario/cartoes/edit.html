@@ -16,7 +16,7 @@
   <div class="card-body position-relative">
     <div class="row">
       <div class="col-lg-12">
-        <h5>Editar os dados de recebimento.</h5>
+        <h5>Editar os dados referente ao pagamento da fatura do Cartão de Crédito.</h5>
         <br>
         <div>
           <form action=".{% if from %}?next={{ from|urlencode }}{% endif %}" class="form-horizontal" method="post">
@@ -37,9 +37,6 @@
                   </div>
                   <div class="col-lg-12">
                     {{ form.banco_rec|bootstrap }}
-                  </div>
-                  <div class="col-lg-12">
-                    {{ form.descricao|bootstrap }}
                   </div>
                   <div class="col-lg-12">
                     {{ form.valor|bootstrap }}

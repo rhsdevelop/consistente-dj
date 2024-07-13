@@ -590,8 +590,7 @@
     <!-- ===============================================-->
     <!--    JavaScripts-->
     <!-- ===============================================-->
-    {% block js %}
-    {% endblock %}
+    <script src="/static/falcon-v3.21.0/public/vendors/jquery/jquery.min.js"></script>
     <script src="/static/falcon-v3.21.0/public/vendors/popper/popper.min.js"></script>
     <script src="/static/falcon-v3.21.0/public/vendors/bootstrap/bootstrap.min.js"></script>
     <script src="/static/falcon-v3.21.0/public/vendors/anchorjs/anchor.min.js"></script>
@@ -602,6 +601,8 @@
     <script src="https://polyfill.io/v3/polyfill.min.js?features=window.scroll"></script>
     <script src="/static/falcon-v3.21.0/public/vendors/list.js/list.min.js"></script>
     <script src="/static/falcon-v3.21.0/public/assets/js/theme.js"></script>
+    {% block js %}
+    {% endblock %}
 
   </body>
 

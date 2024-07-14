@@ -1251,6 +1251,8 @@ def edit_transferir(request, diario_id):
             transferir_rec.datavenc = request.POST['datavenc']
             if 'datapago' in request.POST and request.POST['datapago']:
                 transferir_rec.datapago = request.POST['datapago']
+            else:
+                transferir_rec.datapago = None
             transferir_rec.descricao = request.POST['descricao']
             transferir_rec.valor = request.POST['valor']
             transferir_rec.assign_user_id = request.user
@@ -1538,3 +1540,174 @@ def list_cartoes(request):
         'active_diario_cartoes': 'active',
     }
     return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.view_diario')
+def fluxo_caixa(request):
+    filter_customer = {}
+    filter_search = {}
+    filter_initial = {}
+    list_diario = []
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            filter_customer['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    if request.GET:
+        form = FluxoCaixaForm(request.GET)
+        filter_banco = filter_customer.copy()
+        form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+        for key, value in request.GET.items():
+            if key in ['consistente_cliente', 'banco'] and value:
+                filter_search[key] = value
+                filter_initial[key] = value
+            elif key in ['venc_inicial', 'pag_inicial'] and value:
+                chave = {
+                    'venc_inicial': 'datavenc',
+                    'pag_inicial': 'datapago',
+                }
+                filter_search['%s__gte' % chave[key]] = value
+                filter_initial['%s__lt' % chave[key]] = value
+            elif key in ['data_final', 'venc_final', 'pag_final'] and value:
+                chave = {
+                    'venc_final': 'datavenc',
+                    'pag_final': 'datapago',
+                }
+                filter_search['%s__lte' % chave[key]] = value
+        if not 'banco' in filter_search:
+            filter_search['banco__tipomov__in'] = [0, 1]
+            filter_initial['banco__tipomov__in'] = [0, 1]
+        filter_initial['tipomov__in'] = [0, 3]
+        soma_entradas = Diario.objects.filter(**filter_customer).filter(**filter_initial)
+        filter_initial['tipomov__in'] = [1, 4]
+        soma_saidas = Diario.objects.filter(**filter_customer).filter(**filter_initial)
+        saldo_inicial = soma_entradas.aggregate(Sum('valor'))['valor__sum'] - soma_saidas.aggregate(Sum('valor'))['valor__sum']
+        saldo_inicial = round(saldo_inicial, 2)
+        new_item = {
+            'banco': '',
+            'parceiro': '',
+            'categoria': '',
+            'valor_entra': '',
+            'valor_sai': '',
+            'valor_saldo': saldo_inicial,
+            'datavenc': '',
+            'datapago': '',
+        }
+        list_diario.append(new_item)
+        saldo_atual = saldo_inicial
+        soma_entradas = Decimal('0.0')
+        soma_saidas = Decimal('0.0')
+        diario = Diario.objects.filter(**filter_customer).filter(**filter_search).exclude(datapago=None).order_by('datapago', 'datavenc')
+        for i in diario:
+            valor_entra = Decimal('0.00') if i.tipomov in [1, 4] else i.valor 
+            valor_sai = Decimal('0.00') if i.tipomov in [0, 3] else i.valor
+            soma_entradas += valor_entra
+            soma_saidas += valor_sai
+            saldo_atual = saldo_atual + valor_entra - valor_sai
+            if i.tipomov == 4 and i.descricao == '<CRED.CARD>':
+                nomecartao = Diario.objects.filter(origin_transfer=i.id).first().banco.nomebanco
+            if i.tipomov == 3 and i.descricao == '<CRED.CARD>':
+                nomecartao = Diario.objects.filter(id=i.origin_transfer).first().banco.nomebanco
+            new_item = {
+                'id': i.id,
+                'banco': i.banco,
+                'parceiro': i.parceiro if not i.descricao == '<CRED.CARD>' else nomecartao,
+                'categoria': i.categoria if not i.descricao == '<CRED.CARD>' else 'Cartão de Crédito',
+                'valor_entra': valor_entra if valor_entra else '',
+                'valor_sai': valor_sai if valor_sai else '',
+                'valor_saldo': saldo_atual,
+                'datavenc': i.datavenc,
+                'datapago': i.datapago,
+            }
+            if 'somente_aberto' in request.GET and request.GET['somente_aberto']:
+                continue
+            list_diario.append(new_item)
+        if 'somente_aberto' in request.GET and request.GET['somente_aberto']:
+            list_diario[0]['valor_saldo'] = saldo_atual
+        diario = Diario.objects.filter(**filter_customer).filter(**filter_search).filter(datapago=None).order_by('datapago', 'datavenc')
+        for i in diario:
+            valor_entra = Decimal('0.00') if i.tipomov in [1, 4] else i.valor 
+            valor_sai = Decimal('0.00') if i.tipomov in [0, 3] else i.valor
+            soma_entradas += valor_entra
+            soma_saidas += valor_sai
+            saldo_atual = saldo_atual + valor_entra - valor_sai
+            if i.tipomov == 4 and i.descricao == '<CRED.CARD>':
+                nomecartao = Diario.objects.filter(origin_transfer=i.id).first().banco.nomebanco
+            if i.tipomov == 3 and i.descricao == '<CRED.CARD>':
+                nomecartao = Diario.objects.filter(id=i.origin_transfer).first().banco.nomebanco
+            new_item = {
+                'id': i.id,
+                'banco': i.banco,
+                'parceiro': i.parceiro if not i.descricao == '<CRED.CARD>' else nomecartao,
+                'categoria': i.categoria if not i.descricao == '<CRED.CARD>' else 'Cartão de Crédito',
+                'valor_entra': valor_entra if valor_entra else '',
+                'valor_sai': valor_sai if valor_sai else '',
+                'valor_saldo': saldo_atual,
+                'datavenc': i.datavenc,
+                'datapago': i.datapago,
+            }
+            list_diario.append(new_item)
+    else:
+        form = FluxoCaixaForm()
+        form.fields['venc_inicial'].initial = str(date.today().replace(day=1))
+        form.fields['venc_final'].initial = str(date.today().replace(day=monthrange(date.today().year, date.today().month)[1]))
+        soma_entradas = Decimal('0.00')
+        soma_saidas = Decimal('0.00')
+        saldo_atual = Decimal('0.00')
+    template = loader.get_template('relatorios/caixa.html')
+    context = {
+        'title': 'Fluxo de Caixa - Extrato de Movimento',
+        'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'hoje': date.today(),
+        'list_diario': list_diario,
+        'form': form,
+        'soma_entradas': soma_entradas,
+        'soma_saidas': soma_saidas,
+        'confronto': soma_entradas - soma_saidas,
+        'saldo_fim': saldo_atual,
+        'active_relatorios': 'show',
+        'active_relatorios_caixa': 'active',
+    }
+    return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.change_diario')
+def pagar_fluxo_caixa(request, diario_id):
+    diario = Diario.objects.filter(pk=diario_id, datapago=None)
+    if diario:
+        if diario[0].tipomov in [0, 1] and diario[0].banco.tipomov != 2:
+            diario.update(datapago=date.today())
+            messages.success(request, 'Pagamento confirmado com sucesso!')
+        elif diario[0].tipomov in [0, 1] and diario[0].banco.tipomov == 2:
+            messages.error(request, 'Não é possível fazer pagamento individual de compra realizada em cartão de crédito. Realize o pagamento do cartão.')
+        elif diario[0].tipomov == 3 and diario[0].banco.tipomov == 2:
+            nomecartao = Diario.objects.filter(id=diario[0].origin_transfer, tipomov=4)
+            pagar = Diario.objects.filter(fatura=diario[0].fatura, banco=diario[0].banco, tipomov=1).update(datapago=date.today())
+            nomecartao.update(datapago=date.today())
+            diario.update(datapago=date.today())
+            messages.success(request, 'Pagamento confirmado com sucesso!')
+        elif diario[0].tipomov == 4 and diario[0].descricao == '<CRED.CARD>':
+            nomecartao = Diario.objects.filter(origin_transfer=diario[0].id, tipomov=3)
+            pagar = Diario.objects.filter(fatura=nomecartao[0].fatura, banco=nomecartao[0].banco, tipomov=1).update(datapago=date.today())
+            nomecartao.update(datapago=date.today())
+            diario.update(datapago=date.today())
+            messages.success(request, 'Pagamento confirmado com sucesso!')
+        elif diario[0].tipomov == 3 and diario[0].banco.tipomov != 2:
+            transf = Diario.objects.filter(id=diario[0].origin_transfer, tipomov=4)
+            transf.update(datapago=date.today())
+            diario.update(datapago=date.today())
+        elif diario[0].tipomov == 4 and diario[0].descricao != '<CRED.CARD>':
+            transf = Diario.objects.filter(origin_transfer=diario[0].id, tipomov=3)
+            transf.update(datapago=date.today())
+            diario.update(datapago=date.today())
+    else:
+        messages.warning(request, 'Não é possível confirmar esse documento. Favor, verifique se está pago.')
+    path = request.GET.get('from', None)
+    if path:
+        return redirect(path)
+    else:
+        return redirect('/pagar/list')

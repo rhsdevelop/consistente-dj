@@ -33,4 +33,6 @@ urlpatterns = [
     path('transferir/<int:diario_id>/edit/', views.edit_transferir, name='edit_transferir'),
     path('cartoes/list/', views.list_cartoes, name='list_cartoes'),
     path('cartoes/<int:diario_id>/edit/', views.edit_cartoes, name='edit_cartoes'),
+    path('relatorio/caixa/', views.fluxo_caixa, name='fluxo_caixa'),
+    path('relatorio/caixa/<int:diario_id>/pagar/', views.pagar_fluxo_caixa, name='pagar_fluxo_caixa'),
 ]

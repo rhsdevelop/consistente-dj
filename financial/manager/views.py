@@ -232,8 +232,9 @@ def add_banco(request):
             item.create_user = request.user
             item.assign_user = request.user
             item.save()
-            for usuariobanco in request['POST'].getlist('allowed_users'):
-                item.allowed_users.add(usuariobanco)
+            if 'allowed_users' in request.POST and request.POST['allowed_users']:
+                for usuariobanco in request.POST.getlist('allowed_users'):
+                    item.allowed_users.add(usuariobanco)
             messages.success(request, 'Registro adicionado com sucesso.')
         else:
             messages.error(request, form.errors)
@@ -1584,7 +1585,15 @@ def fluxo_caixa(request):
         soma_entradas = Diario.objects.filter(**filter_customer).filter(**filter_initial)
         filter_initial['tipomov__in'] = [1, 4]
         soma_saidas = Diario.objects.filter(**filter_customer).filter(**filter_initial)
-        saldo_inicial = soma_entradas.aggregate(Sum('valor'))['valor__sum'] - soma_saidas.aggregate(Sum('valor'))['valor__sum']
+        if soma_entradas:
+            soma_entradas = soma_entradas.aggregate(Sum('valor'))['valor__sum']
+        else:
+            soma_entradas = Decimal('0.00')
+        if soma_saidas:
+            soma_saidas = soma_saidas.aggregate(Sum('valor'))['valor__sum']
+        else:
+            soma_saidas = Decimal('0.00')
+        saldo_inicial = soma_entradas - soma_saidas
         saldo_inicial = round(saldo_inicial, 2)
         new_item = {
             'banco': '',
@@ -1607,14 +1616,15 @@ def fluxo_caixa(request):
             soma_entradas += valor_entra
             soma_saidas += valor_sai
             saldo_atual = saldo_atual + valor_entra - valor_sai
-            if i.tipomov == 4 and i.descricao == '<CRED.CARD>':
+            nomecartao = None
+            if i.tipomov == 4:
                 nomecartao = Diario.objects.filter(origin_transfer=i.id).first().banco.nomebanco
-            if i.tipomov == 3 and i.descricao == '<CRED.CARD>':
+            if i.tipomov == 3:
                 nomecartao = Diario.objects.filter(id=i.origin_transfer).first().banco.nomebanco
             new_item = {
                 'id': i.id,
                 'banco': i.banco,
-                'parceiro': i.parceiro if not i.descricao == '<CRED.CARD>' else nomecartao,
+                'parceiro': i.parceiro if not nomecartao else nomecartao,
                 'categoria': i.categoria if not i.descricao == '<CRED.CARD>' else 'Cartão de Crédito',
                 'valor_entra': valor_entra if valor_entra else '',
                 'valor_sai': valor_sai if valor_sai else '',
@@ -1654,6 +1664,8 @@ def fluxo_caixa(request):
         form = FluxoCaixaForm()
         form.fields['venc_inicial'].initial = str(date.today().replace(day=1))
         form.fields['venc_final'].initial = str(date.today().replace(day=monthrange(date.today().year, date.today().month)[1]))
+        filter_banco = filter_customer.copy()
+        form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
         soma_entradas = Decimal('0.00')
         soma_saidas = Decimal('0.00')
         saldo_atual = Decimal('0.00')

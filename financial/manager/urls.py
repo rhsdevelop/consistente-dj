@@ -27,6 +27,7 @@ urlpatterns = [
     path('pagar/add/', views.add_pagar, name='add_pagar'),
     path('pagar/list/', views.list_pagar, name='list_pagar'),
     path('pagar/<int:diario_id>/edit/', views.edit_pagar, name='edit_pagar'),
+    path('pagar/<int:diario_id>/duplica/', views.duplica_pagar, name='duplica_pagar'),
     path('pagar/<int:diario_id>/delete/', views.delete_pagar, name='delette_pagar'),
     path('transferir/add/', views.add_transferir, name='add_transferir'),
     path('transferir/list/', views.list_transferir, name='list_transferir'),

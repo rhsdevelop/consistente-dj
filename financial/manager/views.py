@@ -804,6 +804,17 @@ def add_pagar(request):
                 crc_user = ConsistenteUsuario.objects.filter(user=request.user)
                 if crc_user:
                     item.consistente_cliente = crc_user.first().consistente_cliente
+            # Rotina pra incluir valor em fatura de cartão de crédito
+            if item.banco.tipomov == 2 and item.banco.diavenc and item.fatura:
+                nomecartao = Diario.objects.filter(fatura=item.fatura, banco=item.banco, tipomov=3)
+                if nomecartao and nomecartao[0].datapago:
+                    messages.error(request, 'A fatura do cartão de crédito referente ao período informado já foi paga. Não é possível inserir esse pagamento.')
+                    path = request.GET.get('next', None)
+                    if path:
+                        return redirect(path)
+                    else:
+                        return redirect('/pagar/list')
+            ###
             item.create_user = request.user
             item.assign_user = request.user
             item.tipomov = 1
@@ -1075,6 +1086,157 @@ def edit_pagar(request, diario_id):
     else:
         form.fields['fatura'].widget.attrs['disabled'] = True
     template = loader.get_template('diario/pagar/edit.html')
+    context = {
+        'title': 'Contas à Pagar',
+        'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'voltar': voltar,
+        'from': request.GET.get('from', None),
+        'form': form,
+        'active_diario': 'show',
+        'active_diario_pagar': 'active',
+    }
+    return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.change_diario')
+def duplica_pagar(request, diario_id):
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            pagar = Diario.objects.get(id=diario_id, consistente_cliente_id=crc_user.first().consistente_cliente_id)
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    else:
+        pagar = Diario.objects.get(id=diario_id)
+    if request.POST:
+        request_post = request.POST.copy()
+        if not 'datavenc' in request_post:
+            banco_venc = Banco.objects.get(id=request_post['banco'])
+            request_post['datavenc'] = request_post['fatura'] + '-%s' % str(banco_venc.diavenc).zfill(2)
+        form = AddDiarioForm(request_post)
+        form.fields['datavenc'].widget.attrs['readonly'] = False
+        if not request.user.is_staff:
+            del form.fields['consistente_cliente']
+        if form.is_valid():
+            item = form.save(commit=False)
+            if not request.user.is_staff:
+                crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+                if crc_user:
+                    item.consistente_cliente = crc_user.first().consistente_cliente
+            # Rotina pra incluir valor em fatura de cartão de crédito
+            if item.banco.tipomov == 2 and item.banco.diavenc and item.fatura:
+                nomecartao = Diario.objects.filter(fatura=item.fatura, banco=item.banco, tipomov=3)
+                if nomecartao and nomecartao[0].datapago:
+                    messages.error(request, 'A fatura do cartão de crédito referente ao período informado já foi paga. Não é possível inserir esse pagamento.')
+                    path = request.GET.get('next', None)
+                    if path:
+                        return redirect(path)
+                    else:
+                        return redirect('/pagar/list')
+            ###
+            item.create_user = request.user
+            item.assign_user = request.user
+            item.tipomov = 1
+            item.save()
+            # Rotina pra incluir valor em fatura de cartão de crédito
+            if item.banco.tipomov == 2 and item.banco.diavenc and item.fatura:
+                dados_cartao = {
+                    'consistente_cliente': item.consistente_cliente, 
+                    'user': request.user, 
+                    'fatura': item.fatura, 
+                    'banco': item.banco, 
+                    'datavenc': item.datavenc,
+                }
+                atualiza_cartao(**dados_cartao)
+            #########
+            if int(request.POST['parcelas']) > 1:
+                origin = dict(Diario.objects.filter(id=item.id).values()[0])
+                if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                    pass
+                else:
+                    item.descricao += ' 1/%s' % request.POST['parcelas']
+                    item.origin_transfer = item.id
+                item.save()
+                del origin['id']
+                origin['datapago'] = None
+                datavenc = origin['datavenc']
+                datadoc = origin['datadoc']
+                fatura = origin['fatura']
+                for i in range(2, int(request.POST['parcelas']) + 1):
+                    year = datavenc.year
+                    month = datavenc.month + 1
+                    day = origin['datavenc'].day
+                    if month == 13:
+                        year += 1
+                        month = 1
+                    if day > monthrange(year, month)[1]:
+                        day = monthrange(year, month)[1]
+                    datavenc = datavenc.replace(year=year, month=month, day=day)
+                    if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                        year = datadoc.year
+                        month = datadoc.month + 1
+                        day = origin['datadoc'].day
+                        if month == 13:
+                            year += 1
+                            month = 1
+                        if day > monthrange(year, month)[1]:
+                            day = monthrange(year, month)[1]
+                        datadoc = datadoc.replace(year=year, month=month, day=day)
+                    new_item = origin.copy()
+                    new_item['datavenc'] = datavenc
+                    new_item['fatura'] = str(datavenc)[:7]
+                    if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                        new_item['datadoc'] = datadoc
+                    else:
+                        new_item['descricao'] += ' %s/%s' % (i, request.POST['parcelas'])
+                        new_item['origin_transfer'] = item.id
+                    resp = Diario.objects.create(**new_item)
+                    # Rotina pra incluir valor em fatura de cartão de crédito
+                    if resp.banco.tipomov == 2 and resp.banco.diavenc and resp.fatura:
+                        dados_cartao = {
+                            'consistente_cliente': resp.consistente_cliente, 
+                            'user': request.user, 
+                            'fatura': resp.fatura, 
+                            'banco': resp.banco, 
+                            'datavenc': resp.datavenc,
+                        }
+                        atualiza_cartao(**dados_cartao)
+            messages.success(request, 'Registro adicionado com sucesso.')
+        else:
+            messages.error(request, form.errors)
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/pagar/list')
+    filter_customer = {}
+    form = AddDiarioForm(instance=pagar)
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            form.fields['consistente_cliente'].widget = forms.HiddenInput()
+            filter_customer['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    filter_parceiro = filter_customer.copy()
+    filter_parceiro['modo__in'] = [0, 2]
+    filter_categoria = filter_customer.copy()
+    filter_categoria['tipomov'] = 1
+    filter_banco = filter_customer.copy()
+    #filter_banco['tipomov__in'] = [0, 1, 3]
+    form.fields['parceiro'].queryset = Parceiro.objects.filter(**filter_parceiro).order_by('nome')
+    form.fields['categoria'].queryset = Categoria.objects.filter(**filter_categoria).order_by('categoria')
+    form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    voltar = False
+    if pagar.fatura:
+        form.fields['datavenc'].widget.attrs['disabled'] = True
+        form.fields['datapago'].widget.attrs['disabled'] = True
+    else:
+        form.fields['fatura'].widget.attrs['disabled'] = True
+    template = loader.get_template('diario/pagar/duplica.html')
     context = {
         'title': 'Contas à Pagar',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),

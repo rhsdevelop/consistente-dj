@@ -223,3 +223,26 @@ class FluxoCaixaForm(forms.Form):
         required=False,
     )
     somente_aberto = forms.BooleanField(required=False, label='Documentos em aberto (não pagos)')
+
+
+class ResumoForm(forms.Form):
+    consistente_cliente = forms.ModelChoiceField(queryset=ConsistenteCliente.objects.all().order_by('fantasia'), required=False, label='Cliente TGI')
+    banco = forms.ModelChoiceField(queryset=Banco.objects.all().order_by('nomebanco'), required=False, label='Banco')
+    categoria = forms.ModelMultipleChoiceField(queryset=Categoria.objects.all().order_by('categoria'), required=False, label='Categoria')
+    parceiro = forms.ModelMultipleChoiceField(queryset=Parceiro.objects.all().order_by('nome'), required=False, label='Parceiro')
+    data_inicial = forms.DateField(
+        label='Mês Inicial',
+        widget=forms.widgets.DateInput(
+            attrs={'type': 'month'},
+            format='%Y-%m'
+        ),
+        required=False,
+    )
+    data_final = forms.DateField(
+        label='Vencimento Final',
+        widget=forms.widgets.DateInput(
+            attrs={'type': 'month'},
+            format='%Y-%m'
+        ),
+        required=False,
+    )

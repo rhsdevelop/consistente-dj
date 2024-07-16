@@ -1933,6 +1933,7 @@ def resumo_diario(request):
         filter_categoria['classifica'] = True
         form.fields['categoria'].queryset = Categoria.objects.filter(**filter_categoria).order_by('categoria')
     filter_search['categoria__classifica'] = True
+    filter_search['tipomov__in'] = [1, 4]
     if 'categoria' in filter_search:
         filter_categoria['id'] = filter_search['categoria']
     limites = Categoria.objects.filter(**filter_categoria).aggregate(Sum('limitemensal'))

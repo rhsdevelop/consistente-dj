@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -80,6 +82,7 @@ class Categoria(models.Model):
     consistente_cliente = models.ForeignKey(ConsistenteCliente, verbose_name='Cliente do Consistente', on_delete=models.PROTECT, related_name='category_customer')
     categoria = models.CharField(verbose_name='Categoria', max_length=50)
     tipomov = models.IntegerField(verbose_name='Tipo de Movimento', choices=TIPO_MOVIMENTO)
+    limitemensal = models.DecimalField(verbose_name='Orçamento Mensal', decimal_places=2, max_digits=30, default=Decimal('0.00'))
     classifica = models.BooleanField()
     create_user = models.ForeignKey(User, verbose_name='Criado por', on_delete=models.PROTECT, related_name='category_user_create', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)

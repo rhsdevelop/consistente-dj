@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User
 from django.db.models import Sum
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncMonth, TruncDate, TruncDay
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.template import loader
@@ -423,6 +423,7 @@ def list_categoria(request):
     form = FindCategoriaForm(request.GET)
     form.fields['consistente_cliente'].required = False
     form.fields['categoria'].required = False
+    form.fields['limitemensal'].required = False
     form.fields['tipomov'].required = False
     filter_search = {}
     if not request.user.is_staff:
@@ -1890,10 +1891,87 @@ def pagar_fluxo_caixa(request, diario_id):
 
 @login_required
 @permission_required('manager.view_diario')
+def resumo_diario(request):
+    filter_customer = {}
+    filter_search = {}
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            filter_customer['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    form = ResumoForm()
+    form.fields['data_inicial'].label = 'Mês analisado'
+    if request.GET:
+        request_get = request.GET.copy()
+        form = ResumoForm()
+        if 'data_inicial' in request_get:
+            form.fields['data_inicial'].initial = request_get['data_inicial']
+        if 'categoria' in request_get:
+            form.fields['categoria'].initial = request_get['categoria']
+        filter_categoria = filter_customer.copy()
+        filter_categoria['tipomov'] = 1
+        filter_categoria['classifica'] = True
+        form.fields['categoria'].queryset = Categoria.objects.filter(**filter_categoria).order_by('categoria')
+        for key, value in request.GET.items():
+            if key in ['consistente_cliente', 'categoria'] and value:
+                filter_search[key] = value
+            elif key in ['data_inicial'] and value:
+                chave = {
+                    'data_inicial': 'datadoc',
+                }
+                periodo = value.split('-')
+                ano = int(periodo[0])
+                mes = int(periodo[1])
+                filter_search['%s__range' % chave[key]] = [value + '-01', value + '-%s' % monthrange(ano, mes)[1]]
+    else:
+        form.fields['data_inicial'].initial = date.today().replace(day=1).strftime('%Y-%m')
+        filter_search['datadoc__range'] = [date.today().replace(day=1), date.today().replace(day=monthrange(date.today().year, date.today().month)[1])]
+        filter_categoria = filter_customer.copy()
+        filter_categoria['tipomov'] = 1
+        filter_categoria['classifica'] = True
+        form.fields['categoria'].queryset = Categoria.objects.filter(**filter_categoria).order_by('categoria')
+    filter_search['categoria__classifica'] = True
+    if 'categoria' in filter_search:
+        filter_categoria['id'] = filter_search['categoria']
+    limites = Categoria.objects.filter(**filter_categoria).aggregate(Sum('limitemensal'))
+    saldo = round(limites['limitemensal__sum'], 2)
+    limite = saldo
+    list_diario = []
+    diario = Diario.objects.annotate(data=TruncDay('datadoc')).filter(**filter_customer).filter(**filter_search).values('data').annotate(valor=Sum('valor')).order_by('data')
+    acumulado = Decimal('0.00')
+    for i in diario:
+        new_item = i.copy()
+        new_item['valor'] = round(new_item['valor'], 2)
+        acumulado += round(new_item['valor'], 2)
+        saldo -= round(new_item['valor'], 2)
+        new_item['valor_acum'] = acumulado
+        new_item['valor_disp'] = saldo
+        list_diario.append(new_item)
+    template = loader.get_template('relatorios/diario.html')
+    context = {
+        'title': 'Relatório - Diário de Compras',
+        'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'hoje': date.today(),
+        'list_diario': list_diario,
+        'limite': limite,
+        'acumulado': acumulado,
+        'saldo': saldo,
+        'form': form,
+        'active_relatorios': 'show',
+        'active_relatorios_diario': 'active',
+    }
+    return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.view_diario')
 def resumo_categoria(request):
     filter_customer = {}
     filter_search = {}
     filter_initial = {}
+    soma_meses = {}
     list_diario = []
     if not request.user.is_staff:
         crc_user = ConsistenteUsuario.objects.filter(user=request.user)
@@ -1927,7 +2005,10 @@ def resumo_categoria(request):
                     'data_final': 'datadoc',
                     'pag_final': 'datapago',
                 }
-                filter_search['%s__lte' % chave[key]] = value + '-01'
+                periodo = value.split('-')
+                ano = int(periodo[0])
+                mes = int(periodo[1])
+                filter_search['%s__lte' % chave[key]] = value + '-%s' % monthrange(ano, mes)[1]
         filter_initial['tipomov__in'] = [0, 3]
         soma_entradas = Diario.objects.filter(**filter_customer).filter(**filter_initial)
         filter_initial['tipomov__in'] = [1, 4]
@@ -1960,6 +2041,7 @@ def resumo_categoria(request):
         filter_search['categoria__classifica'] = True
         meses = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth('datadoc')).values('mes').annotate(Sum('valor')).order_by('mes')
         meses = {str(x['mes'])[:7]: Decimal('0.00') for x in meses}
+        soma_meses = meses.copy()
         diario = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth('datadoc')).values_list('categoria__categoria', 'mes').annotate(Sum('valor')).order_by('categoria__categoria', 'mes')
         new_item = {'categoria': ''}
         primeiro = True
@@ -1982,6 +2064,7 @@ def resumo_categoria(request):
                     'categoria': i[0],
                     'meses': meses.copy()
                 }
+            soma_meses[str(i[1])[:7]] += round(i[2], 2)
             new_item['meses'][str(i[1])[:7]] = round(i[2], 2)
         list_diario.append(new_item)
     else:
@@ -2005,6 +2088,7 @@ def resumo_categoria(request):
         'form': form,
         'meses': '","'.join([str(x)[:7] for x in meses]),
         'lista_mes': [str(x)[:7] for x in meses],
+        'soma_meses': soma_meses,
         'active_relatorios': 'show',
         'active_relatorios_categoria': 'active',
     }
@@ -2050,7 +2134,10 @@ def resumo_parceiro(request):
                     'data_final': 'datadoc',
                     'pag_final': 'datapago',
                 }
-                filter_search['%s__lte' % chave[key]] = value + '-01'
+                periodo = value.split('-')
+                ano = int(periodo[0])
+                mes = int(periodo[1])
+                filter_search['%s__lte' % chave[key]] = value + '-%s' % monthrange(ano, mes)[1]
         filter_initial['tipomov__in'] = [0, 3]
         soma_entradas = Diario.objects.filter(**filter_customer).filter(**filter_initial)
         filter_initial['tipomov__in'] = [1, 4]

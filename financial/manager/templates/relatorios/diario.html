@@ -5,7 +5,7 @@
 <div class="card card mb-3">
   <div class="card-header">
     <div class="col-auto align-self-center">
-      <h5 class="mb-0"><img class="me-2" src="/static/images/categoria.png" alt="" width="40" />{{ title }}</h5>
+      <h5 class="mb-0"><img class="me-2" src="/static/images/calendar.png" alt="" width="40" />{{ title }}</h5>
     </div>
   </div>
 </div>
@@ -23,10 +23,7 @@
               {{ form.data_inicial|bootstrap }}
             </div>
             <div class="col-lg-3">
-              {{ form.data_final|bootstrap }}
-            </div>
-            <div class="col-lg-3">
-              {{ form.banco|bootstrap }}
+              {{ form.categoria|bootstrap }}
             </div>
             {% if request.user.is_staff %}
             <div class="col-lg-3">
@@ -51,42 +48,39 @@
       <h6 class="m-0 font-weight-bold text-primary">Dados selecionados</h6>
   </div>
   <div class="card-body">
-    <div id="tableExample" data-list='{"valueNames":["categoria","{{ meses }}"],"page":25,"pagination":true}'>
+    <div class="row">
+      <div class="col-lg-3">Orçamento previsto: <b {% if limite < 0 %} style="color:red"{% endif %}>{{ limite }}</b></div>
+      <div class="col-lg-3">Gastos efetuados: <b {% if acumulado < 0 %} style="color:red"{% endif %}>{{ acumulado }}</b></div>
+      <div class="col-lg-3">Valor disponível para compras: <b {% if saldo < 0 %} style="color:red"{% endif %}>{{ saldo }}</b></div>
+    </div>
+  </div>
+  <div class="card-body">
+    <!-- <div id="tableExample" data-list='{"valueNames":["data","valor","valor_acum","valor_disp"],"page":25,"pagination":true}'> -->
       <div class="table-responsive scrollbar">
         <table class="table table-hover table-sm table-striped overflow-hidden table-bordered table-striped fs-10 mb-0">
           <thead class="bg-200">
             <tr>
-              <th class="text-900 sort" data-sort="categoria">Categoria</th>
-              {% for mes in lista_mes %}
-              <th class="text-900 sort" data-sort="{{ mes }}">{{ mes }}</th>
-              {% endfor %}
+              <th class="text-900 sort" data-sort="data">Data</th>
+              <th class="text-900 sort" data-sort="valor">Valor dia</th>
+              <th class="text-900 sort" data-sort="valor_acum">Valor acumulado</th>
+              <th class="text-900 sort" data-sort="valor_disp">Valor disponivel</th>
             </tr>
           </thead>
           {% if list_diario %}
           <tbody class="list">
             {% for diario in list_diario %}
             <tr>
-              <td class="categoria" >{{ diario.categoria }}</td>
-              {% for mes, valor in diario.meses.items %}
-              <td class="{{mes}}" align="right"{% if valor < 0 %} style="color:red"{% endif %}>{{ valor }}</td>
-              {% endfor %}
+              <td class="data" >{{ diario.data }}</td>
+              <td class="valor" align="right"{% if diario.valor < 0 %} style="color:red"{% endif %}>{{ diario.valor }}</td>
+              <td class="valor_acum" align="right"{% if diario.valor_acum < 0 %} style="color:red"{% endif %}>{{ diario.valor_acum }}</td>
+              <td class="valor_disp" align="right"{% if diario.valor_disp < 0 %} style="color:red"{% endif %}>{{ diario.valor_disp }}</td>
             </tr>
             {% endfor %}
           </tbody>
-          {% if soma_meses %}
-          <tfoot>
-            <tr>
-              <td class="text-900" >TOTAL</td>
-              {% for mes, valor in soma_meses.items %}
-              <td class="text-900" align="right"{% if valor < 0 %} style="color:red"{% endif %}>{{ valor }}</td>
-              {% endfor %}
-            </tr>
-          </tfoot>
-          {% endif %}
           {% endif %}
         </table>
       </div>
-    </div>
+    <!-- </div> -->
   </div>
 </div>
 {% endblock %}

@@ -239,7 +239,7 @@ class ResumoForm(forms.Form):
         required=False,
     )
     data_final = forms.DateField(
-        label='Vencimento Final',
+        label='Mês Final',
         widget=forms.widgets.DateInput(
             attrs={'type': 'month'},
             format='%Y-%m'

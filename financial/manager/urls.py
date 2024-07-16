@@ -36,6 +36,7 @@ urlpatterns = [
     path('cartoes/<int:diario_id>/edit/', views.edit_cartoes, name='edit_cartoes'),
     path('relatorio/caixa/', views.fluxo_caixa, name='fluxo_caixa'),
     path('relatorio/caixa/<int:diario_id>/pagar/', views.pagar_fluxo_caixa, name='pagar_fluxo_caixa'),
+    path('relatorio/diario/', views.resumo_diario, name='resumo_diario'),
     path('relatorio/categoria/', views.resumo_categoria, name='resumo_categoria'),
     path('relatorio/parceiro/', views.resumo_parceiro, name='resumo_parceiro'),
 ]

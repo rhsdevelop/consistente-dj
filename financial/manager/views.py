@@ -2008,7 +2008,6 @@ def resumo_categoria(request):
         'active_relatorios': 'show',
         'active_relatorios_categoria': 'active',
     }
-    print('","'.join([str(x)[:7] for x in meses]))
     return HttpResponse(template.render(context, request))
 
 
@@ -2097,7 +2096,6 @@ def resumo_parceiro(request):
             #    nomecartao = Diario.objects.filter(origin_transfer=i.id).first().banco.nomebanco
             #if i.tipomov == 3 and i.descricao == '<CRED.CARD>':
             #    nomecartao = Diario.objects.filter(id=i.origin_transfer).first().banco.nomebanco
-            print(i)
             if i[0] != new_item['parceiro']:
                 if not primeiro:
                     list_diario.append(new_item)
@@ -2109,7 +2107,6 @@ def resumo_parceiro(request):
                 }
             new_item['meses'][str(i[1])[:7]] = round(i[2], 2)
         list_diario.append(new_item)
-        print(len(i))
     else:
         form = ResumoForm()
         form.fields['data_inicial'].initial = date.today().replace(month=1, day=1).strftime('%Y-%m')
@@ -2134,5 +2131,4 @@ def resumo_parceiro(request):
         'active_relatorios': 'show',
         'active_relatorios_parceiro': 'active',
     }
-    print('","'.join([str(x)[:7] for x in meses]))
     return HttpResponse(template.render(context, request))

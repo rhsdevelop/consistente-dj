@@ -33,7 +33,7 @@ RELACIONAMENTO = [
 
 class ConsistenteCliente(models.Model):
     nome = models.CharField(verbose_name='Nome', max_length=40)
-    fantasia = models.CharField(verbose_name='Fantasia', max_length=80, blank=True, null=True)
+    fantasia = models.CharField(verbose_name='Fantasia', max_length=80)
     doc = models.CharField(verbose_name='CNPJ/CPF', max_length=20, blank=True, null=True)
     create_user = models.ForeignKey(User, verbose_name='Criado por', on_delete=models.PROTECT, related_name='cliente_user_create', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)

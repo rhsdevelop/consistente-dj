@@ -162,3 +162,5 @@ cython_debug/
 #.idea/
 consistente.db
 migrations/
+
+.tool-versions

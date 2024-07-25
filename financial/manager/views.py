@@ -583,6 +583,49 @@ def add_receber(request):
             item.assign_user = request.user
             item.tipomov = 0
             item.save()
+            if int(request.POST['parcelas']) > 1:
+                origin = dict(Diario.objects.filter(id=item.id).values()[0])
+                if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                    pass
+                else:
+                    item.descricao += ' 1/%s' % request.POST['parcelas']
+                    item.origin_transfer = item.id
+                item.save()
+                del origin['id']
+                origin['datapago'] = None
+                datavenc = origin['datavenc']
+                datadoc = origin['datadoc']
+                fatura = origin['fatura']
+                for i in range(2, int(request.POST['parcelas']) + 1):
+                    year = datavenc.year
+                    month = datavenc.month + 1
+                    day = origin['datavenc'].day
+                    if month == 13:
+                        year += 1
+                        month = 1
+                    if day > monthrange(year, month)[1]:
+                        day = monthrange(year, month)[1]
+                    datavenc = datavenc.replace(year=year, month=month, day=day)
+                    if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                        year = datadoc.year
+                        month = datadoc.month + 1
+                        day = origin['datadoc'].day
+                        if month == 13:
+                            year += 1
+                            month = 1
+                        if day > monthrange(year, month)[1]:
+                            day = monthrange(year, month)[1]
+                        datadoc = datadoc.replace(year=year, month=month, day=day)
+                    new_item = origin.copy()
+                    new_item['datavenc'] = datavenc
+                    if fatura:
+                        new_item['fatura'] = str(datavenc)[:7]
+                    if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                        new_item['datadoc'] = datadoc
+                    else:
+                        new_item['descricao'] += ' %s/%s' % (i, request.POST['parcelas'])
+                        new_item['origin_transfer'] = item.id
+                    resp = Diario.objects.create(**new_item)
             messages.success(request, 'Registro adicionado com sucesso.')
         else:
             messages.error(request, form.errors)
@@ -652,6 +695,49 @@ def duplica_receber(request, diario_id):
             item.assign_user = request.user
             item.tipomov = 0
             item.save()
+            if int(request.POST['parcelas']) > 1:
+                origin = dict(Diario.objects.filter(id=item.id).values()[0])
+                if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                    pass
+                else:
+                    item.descricao += ' 1/%s' % request.POST['parcelas']
+                    item.origin_transfer = item.id
+                item.save()
+                del origin['id']
+                origin['datapago'] = None
+                datavenc = origin['datavenc']
+                datadoc = origin['datadoc']
+                fatura = origin['fatura']
+                for i in range(2, int(request.POST['parcelas']) + 1):
+                    year = datavenc.year
+                    month = datavenc.month + 1
+                    day = origin['datavenc'].day
+                    if month == 13:
+                        year += 1
+                        month = 1
+                    if day > monthrange(year, month)[1]:
+                        day = monthrange(year, month)[1]
+                    datavenc = datavenc.replace(year=year, month=month, day=day)
+                    if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                        year = datadoc.year
+                        month = datadoc.month + 1
+                        day = origin['datadoc'].day
+                        if month == 13:
+                            year += 1
+                            month = 1
+                        if day > monthrange(year, month)[1]:
+                            day = monthrange(year, month)[1]
+                        datadoc = datadoc.replace(year=year, month=month, day=day)
+                    new_item = origin.copy()
+                    new_item['datavenc'] = datavenc
+                    if fatura:
+                        new_item['fatura'] = str(datavenc)[:7]
+                    if 'recorrencia' in request.POST and request.POST['recorrencia']:
+                        new_item['datadoc'] = datadoc
+                    else:
+                        new_item['descricao'] += ' %s/%s' % (i, request.POST['parcelas'])
+                        new_item['origin_transfer'] = item.id
+                    resp = Diario.objects.create(**new_item)
             messages.success(request, 'Registro adicionado com sucesso.')
         else:
             messages.error(request, form.errors)

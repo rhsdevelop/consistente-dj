@@ -83,7 +83,7 @@ class Categoria(models.Model):
     categoria = models.CharField(verbose_name='Categoria', max_length=50)
     tipomov = models.IntegerField(verbose_name='Tipo de Movimento', choices=TIPO_MOVIMENTO)
     limitemensal = models.DecimalField(verbose_name='Orçamento Mensal', decimal_places=2, max_digits=30, default=Decimal('0.00'))
-    classifica = models.BooleanField()
+    classifica = models.BooleanField(verbose_name='Contempla no painel')
     create_user = models.ForeignKey(User, verbose_name='Criado por', on_delete=models.PROTECT, related_name='category_user_create', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     assign_user = models.ForeignKey(User, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='category_user_assign', blank=True, null=True)

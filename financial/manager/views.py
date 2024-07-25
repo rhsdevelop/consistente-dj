@@ -625,6 +625,116 @@ def add_receber(request):
 
 
 @login_required
+@permission_required('manager.add_diario')
+def duplica_receber(request, diario_id):
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            receber = Diario.objects.get(id=diario_id, consistente_cliente_id=crc_user.first().consistente_cliente_id)
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    else:
+        receber = Diario.objects.get(id=diario_id)
+    if request.POST:
+        form = AddDiarioForm(request.POST)
+        if not request.user.is_staff:
+            del form.fields['consistente_cliente']
+        del form.fields['parcelas']
+        del form.fields['recorrencia']
+        if form.is_valid():
+            item = form.save(commit=False)
+            if not request.user.is_staff:
+                crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+                if crc_user:
+                    item.consistente_cliente = crc_user.first().consistente_cliente
+            item.create_user = request.user
+            item.assign_user = request.user
+            item.tipomov = 0
+            item.save()
+            messages.success(request, 'Registro adicionado com sucesso.')
+        else:
+            messages.error(request, form.errors)
+        path = request.GET.get('next', None)
+        if path:
+            return redirect(path)
+        else:
+            return redirect('/receber/list')
+    filter_customer = {}
+    form = AddDiarioForm(instance=receber)
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            form.fields['consistente_cliente'].widget = forms.HiddenInput()
+            filter_customer['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    filter_parceiro = filter_customer.copy()
+    filter_parceiro['modo__in'] = [0, 1]
+    filter_categoria = filter_customer.copy()
+    filter_categoria['tipomov'] = 0
+    filter_banco = filter_customer.copy()
+    filter_banco['tipomov__in'] = [0, 1, 3]
+    form.fields['parceiro'].queryset = Parceiro.objects.filter(**filter_parceiro).order_by('nome')
+    form.fields['categoria'].queryset = Categoria.objects.filter(**filter_categoria).order_by('categoria')
+    form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+    template = loader.get_template('diario/receber/duplica.html')
+    context = {
+        'title': 'Contas à Receber',
+        'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'from': request.GET.get('from', None),
+        'form': form,
+        'active_diario': 'show',
+        'active_diario_receber': 'active',
+    }
+    return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.delete_diario')
+def delete_receber(request, diario_id):
+    diario = Diario.objects.filter(pk=diario_id, tipomov=0, datapago=None)
+    if diario:
+        # Verificar se tem múltiplos.
+        if diario[0].origin_transfer:
+            multiple = Diario.objects.filter(origin_transfer=diario[0].origin_transfer, tipomov=0, datapago=None)
+            s = ''
+            foi = 'i'
+            qt = len(multiple)
+            if qt > 1:
+                s = 's'
+                foi = 'ram'
+            for item in multiple:
+                consistente_cliente = item.consistente_cliente
+                banco = item.banco
+                tipomov = item.banco.tipomov
+                diavenc = item.banco.diavenc
+                datavenc = item.datavenc
+                fatura = item.fatura
+                item.delete()
+            #multiple.delete()
+            messages.success(request, 'Documento%s apagado%s com sucesso! Pagamento parcelado, fo%s apagado%s %s documento%s.' % (s, s, foi, s, qt, s))
+        else:
+            item = diario[0]
+            consistente_cliente = item.consistente_cliente
+            banco = item.banco
+            tipomov = item.banco.tipomov
+            diavenc = item.banco.diavenc
+            datavenc = item.datavenc
+            fatura = item.fatura
+            item.delete()
+            messages.success(request, 'Documento apagado com sucesso!')
+    else:
+        messages.warning(request, 'Não é possível apagar esse documento. Favor, verifique se está pago.')
+    path = request.GET.get('from', None)
+    if path:
+        return redirect(path)
+    else:
+        return redirect('/receber/list')
+
+
+@login_required
 @permission_required('manager.change_diario')
 def edit_receber(request, diario_id):
     if not request.user.is_staff:
@@ -742,6 +852,7 @@ def list_receber(request):
         'title': 'Contas à Receber',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
         'list_receber': list_receber,
+        'hoje': date.today(),
         'form': form,
         'soma': soma,
         'active_diario': 'show',
@@ -867,7 +978,8 @@ def add_pagar(request):
                         datadoc = datadoc.replace(year=year, month=month, day=day)
                     new_item = origin.copy()
                     new_item['datavenc'] = datavenc
-                    new_item['fatura'] = str(datavenc)[:7]
+                    if fatura:
+                        new_item['fatura'] = str(datavenc)[:7]
                     if 'recorrencia' in request.POST and request.POST['recorrencia']:
                         new_item['datadoc'] = datadoc
                     else:

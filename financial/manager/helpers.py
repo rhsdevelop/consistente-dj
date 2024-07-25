@@ -21,7 +21,7 @@ def atualiza_cartao(user, consistente_cliente, fatura, banco, datavenc):
             'datadoc': datavenc.replace(day=1),
             'datavenc': datavenc,
             'parceiro': Parceiro.objects.filter(consistente_cliente=consistente_cliente).order_by('id').first(),
-            'banco': Banco.objects.filter(consistente_cliente=consistente_cliente).order_by('id').first(),
+            'banco': Banco.objects.filter(consistente_cliente=consistente_cliente).exclude(tipomov=2).order_by('id').first(),
             'fatura': fatura,
             'descricao': '<CRED.CARD>',
             'valor': round(Diario.objects.filter(banco=banco, fatura=fatura, tipomov=1).aggregate(Sum('valor'))['valor__sum'], 2),

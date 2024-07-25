@@ -115,7 +115,11 @@
               <td class="datavenc" ><span hidden>"{{ receber.datavenc|date:'Ymd' }}"</span>{{ receber.datavenc|date:'d/m/Y' }}</td>
               <td class="datapag" ><span hidden>"{{ receber.datapago|date:'Ymd' }}"</span>{{ receber.datapago|date:'d/m/Y' }}</td>
               <td class="categoria" >{{ receber.banco }}</td>
-              <td class="acoes" >{% if perms.manager.change_diario %}<a href="/receber/{{ receber.id }}/edit/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
+              <td class="acoes" >
+                {% if perms.manager.change_diario %}<a href="/receber/{{ receber.id }}/edit/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-pen"></span></button></a>{% endif %}
+                {% if perms.manager.change_diario %}<a href="/receber/{{ receber.id }}/duplica/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-success btn-sm"><span class="fas fa-copy"></span></button></a>{% endif %}
+                {% if perms.manager.delete_diario %}<a href="/receber/{{ receber.id }}/delete/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja apagar esse registro?');"><span class="fas fa-trash"></span></button></a>{% endif %}
+              </td>
             </tr>
             {% endfor %}
           </tbody>

@@ -2107,14 +2107,16 @@ def resumo_diario(request):
         if 'data_inicial' in request_get:
             form.fields['data_inicial'].initial = request_get['data_inicial']
         if 'categoria' in request_get:
-            form.fields['categoria'].initial = request_get['categoria']
+            form.fields['categoria'].initial = request_get.getlist('categoria')
         filter_categoria = filter_customer.copy()
         filter_categoria['tipomov'] = 1
         filter_categoria['classifica'] = True
         form.fields['categoria'].queryset = Categoria.objects.filter(**filter_categoria).order_by('categoria')
         for key, value in request.GET.items():
-            if key in ['consistente_cliente', 'categoria'] and value:
+            if key in ['consistente_cliente'] and value:
                 filter_search[key] = value
+            elif key in ['categoria'] and value:
+                filter_search[key + '__in'] = request.GET.getlist(key)
             elif key in ['data_inicial'] and value:
                 chave = {
                     'data_inicial': 'datadoc',
@@ -2134,8 +2136,12 @@ def resumo_diario(request):
     filter_search['tipomov__in'] = [1, 4]
     if 'categoria' in filter_search:
         filter_categoria['id'] = filter_search['categoria']
+    if 'categoria__in' in filter_search:
+        filter_categoria['id__in'] = filter_search['categoria__in']
     limites = Categoria.objects.filter(**filter_categoria).aggregate(Sum('limitemensal'))
-    saldo = round(limites['limitemensal__sum'], 2)
+    saldo = Decimal('0.00')
+    if limites['limitemensal__sum']:
+        saldo = round(limites['limitemensal__sum'], 2)
     limite = saldo
     list_diario = []
     diario = Diario.objects.annotate(data=TruncDay('datadoc')).filter(**filter_customer).filter(**filter_search).values('data').annotate(valor=Sum('valor')).order_by('data')

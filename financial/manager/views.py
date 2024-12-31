@@ -308,6 +308,34 @@ def edit_banco(request, banco_id):
 
 
 @login_required
+@permission_required('manager.delete_banco')
+def delete_banco(request, banco_id):
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            banco = Banco.objects.get(id=banco_id, consistente_cliente_id=crc_user.first().consistente_cliente_id)
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    else:
+        banco = Banco.objects.get(id=banco_id)
+    if banco:
+        try:
+            banco.delete()
+            messages.success(request, 'Banco apagado com sucesso!')
+        except Exception as err:
+            messages.error(request, 'Não é possível apagar o banco!')
+            messages.error(request, err)
+    else:
+        messages.warning(request, 'Não é possível apagar esse banco. Favor, verifique o id.')
+    path = request.GET.get('from', None)
+    if path:
+        return redirect(path)
+    else:
+        return redirect('/banco/list')
+
+
+@login_required
 @permission_required('manager.view_banco')
 def list_banco(request):
     form = FindBancoForm(request.GET)
@@ -526,6 +554,34 @@ def edit_parceiro(request, parceiro_id):
         'active_register_parceiro': 'active',
     }
     return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.delete_parceiro')
+def delete_parceiro(request, parceiro_id):
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            parceiro = Parceiro.objects.get(id=parceiro_id, consistente_cliente_id=crc_user.first().consistente_cliente_id)
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    else:
+        parceiro = Parceiro.objects.get(id=parceiro_id)
+    if parceiro:
+        try:
+            parceiro.delete()
+            messages.success(request, 'Parceiro apagado com sucesso!')
+        except Exception as err:
+            messages.error(request, 'Não é possível apagar o parceiro!')
+            messages.error(request, err)
+    else:
+        messages.warning(request, 'Não é possível apagar esse parceiro. Favor, verifique o id.')
+    path = request.GET.get('from', None)
+    if path:
+        return redirect(path)
+    else:
+        return redirect('/parceiro/list')
 
 
 @login_required

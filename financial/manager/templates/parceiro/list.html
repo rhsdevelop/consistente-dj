@@ -92,7 +92,10 @@
               <td class="doc">{{ parceiro.doc|default_if_none:"" }}</td>
               <td class="cidade">{{ parceiro.cidade|default_if_none:"" }}</td>
               <td class="modo">{{ parceiro.get_modo_display }}</td>
-              <td class="acoes">{% if perms.manager.change_parceiro %}<a href="/parceiro/{{ parceiro.id }}/edit/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-pen"></span></button></a>{% endif %}</td>
+              <td class="acoes">
+                {% if perms.manager.change_parceiro %}<a href="/parceiro/{{ parceiro.id }}/edit/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-info btn-sm"><span class="fas fa-pen"></span></button></a>{% endif %}
+                {% if perms.manager.delete_parceiro %}<a href="/parceiro/{{ parceiro.id }}/delete/?from={{ request.get_full_path|urlencode }}" ><button class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja apagar esse registro?');"><span class="fas fa-trash"></span></button></a>{% endif %}
+              </td>
             </tr>
             {% endfor %}
           </tbody>

@@ -2336,7 +2336,7 @@ def resumo_categoria(request):
         form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
         meses = []
         for i in range(1, 13):
-            meses.append(str(date.today().replace(month=i))[:7])
+            meses.append(str(date.today().replace(day=1).replace(month=i))[:7])
         soma_entradas = Decimal('0.00')
         soma_saidas = Decimal('0.00')
         saldo_atual = Decimal('0.00')
@@ -2463,7 +2463,7 @@ def resumo_parceiro(request):
         form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
         meses = []
         for i in range(1, 13):
-            meses.append(str(date.today().replace(month=i))[:7])
+            meses.append(str(date.today().replace(day=1).replace(month=i))[:7])
         soma_entradas = Decimal('0.00')
         soma_saidas = Decimal('0.00')
         saldo_atual = Decimal('0.00')

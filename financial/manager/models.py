@@ -54,7 +54,7 @@ class ConsistenteUsuario(models.Model):
     modified = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return self.nome
+        return f'{self.consistente_cliente} - {self.user}'
 
 
 class Banco(models.Model):

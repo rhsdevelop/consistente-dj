@@ -1442,7 +1442,8 @@ def duplica_pagar(request, diario_id):
                         datadoc = datadoc.replace(year=year, month=month, day=day)
                     new_item = origin.copy()
                     new_item['datavenc'] = datavenc
-                    new_item['fatura'] = str(datavenc)[:7]
+                    if fatura:
+                        new_item['fatura'] = str(datavenc)[:7]
                     if 'recorrencia' in request.POST and request.POST['recorrencia']:
                         new_item['datadoc'] = datadoc
                     else:

@@ -1,7 +1,8 @@
 import django.contrib.auth.views
-from django.urls import path
+from django.urls import path, include
 
 from . import views 
+import api
 
 app_name = 'manager'
 urlpatterns = [
@@ -43,4 +44,5 @@ urlpatterns = [
     path('relatorio/diario/', views.resumo_diario, name='resumo_diario'),
     path('relatorio/categoria/', views.resumo_categoria, name='resumo_categoria'),
     path('relatorio/parceiro/', views.resumo_parceiro, name='resumo_parceiro'),
+    path('api/', include('api.urls')),
 ]

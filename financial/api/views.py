@@ -1,13 +1,19 @@
 from django.db.models import Q, Sum
 from django.db.models.functions import TruncMonth, TruncDate, TruncDay
 from django.shortcuts import get_object_or_404
+<<<<<<< HEAD
 from django.contrib.auth import get_user_model
+=======
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
+<<<<<<< HEAD
 from rest_framework_simplejwt.views import TokenObtainPairView
+=======
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
 from . import serialazers
 from .helpers.pagination import DefaultPagination
 from manager import models
@@ -15,6 +21,7 @@ from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
+<<<<<<< HEAD
 class CustonUser(ModelViewSet):
     serializer_class = serialazers.UserSerialazers
 
@@ -23,6 +30,8 @@ class CustonUser(ModelViewSet):
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serialazers.CustomTokenObtainPairSerializer
 
+=======
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
 class ClienteAPIv1(ModelViewSet):
     queryset = models.ConsistenteCliente.objects.all()
     serializer_class = serialazers.ConsistenteClienteSerialazers
@@ -71,7 +80,11 @@ class ClienteUserAPIv1(ModelViewSet):
                 for valor in valores:
                     q_obj |= Q(**{f"{key}__icontains": valor})
                 filter_seach &= q_obj
+<<<<<<< HEAD
         parceiros = models.ConsistenteUsuario.objects.filter(filter_seach).order_by('user')
+=======
+        parceiros = models.ConsistenteUsuario.objects.filter(filter_seach).order_by('nome')
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
         serialazer = self.get_serializer(parceiros, many=True)
         return Response(serialazer.data, status=status.HTTP_200_OK)
 
@@ -686,9 +699,15 @@ class TransfirirAPIv1(ModelViewSet):
         }, status=status.HTTP_200_OK)
     
 
+<<<<<<< HEAD
 class FluxoCaixaAPIv1(ModelViewSet):
     queryset = models.Diario.objects.all()
     serializer_class = serialazers.DiarioSerialazers
+=======
+class FluxoCaixaViewSet(ModelViewSet):
+    queryset = models.Diario.objects.all()
+    serializer_class = serialazers.DiarioSerializer
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
     
@@ -775,8 +794,14 @@ class FluxoCaixaAPIv1(ModelViewSet):
                 new_item = {
                     'id': i.id,
                     'banco': str(i.banco.nomebanco) if i.banco else None,
+<<<<<<< HEAD
                     'parceiro': str(i.parceiro) if not nomecartao else nomecartao,
                     'categoria': str(i.categoria) if i.descricao != '<CRED.CARD>' else 'Cartão de Crédito',
+=======
+                    'parceiro': i.parceiro if not nomecartao else nomecartao,
+                    'categoria': (i.categoria if i.descricao != '<CRED.CARD>'
+                                else 'Cartão de Crédito'),
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
                     'valor_entra': str(valor_entra) if valor_entra else '',
                     'valor_sai': str(valor_sai) if valor_sai else '',
                     'valor_saldo': str(saldo_atual),
@@ -914,9 +939,15 @@ class FluxoCaixaAPIv1(ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+<<<<<<< HEAD
 class ResumoDiarioAPIv1(ModelViewSet):
     queryset = models.Diario.objects.none()
     serializer_class = serialazers.DiarioSerialazers
+=======
+class ResumoDiarioViewSet(ModelViewSet):
+    queryset = models.Diario.objects.none()
+    serializer_class = serialazers.DiarioSerializer
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
 
@@ -1008,9 +1039,15 @@ class ResumoDiarioAPIv1(ModelViewSet):
         }
         return Response(retorno, status=status.HTTP_200_OK)
 
+<<<<<<< HEAD
 class ResumoCategoriaAPIv1(ModelViewSet):
     queryset = models.Diario.objects.none()
     serializer_class = serialazers.DiarioSerialazers
+=======
+class ResumoCategoriaViewSet(ModelViewSet):
+    queryset = models.Diario.objects.none()
+    serializer_class = serialazers.DiarioSerializer
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
 
@@ -1117,9 +1154,15 @@ class ResumoCategoriaAPIv1(ModelViewSet):
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
+<<<<<<< HEAD
 class ResumoParceiroAPIv1(ModelViewSet):
     queryset = models.Diario.objects.none()
     serializer_class = serialazers.DiarioSerialazers
+=======
+class ResumoParceiroViewSet(ModelViewSet):
+    queryset = models.Diario.objects.none()
+    serializer_class = serialazers.DiarioSerializer
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
 

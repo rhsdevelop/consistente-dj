@@ -1,4 +1,5 @@
 from rest_framework import serializers
+<<<<<<< HEAD
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -12,6 +13,17 @@ class UserSerialazers(serializers.ModelSerializer):
             'id',
             'username',
             'profile_picture'
+=======
+from django.contrib.auth.models import User
+from manager import models as consistente
+
+class UserSerialazers(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
         ]
 
 class ConsistenteClienteSerialazers(serializers.ModelSerializer):
@@ -42,7 +54,10 @@ class ConsistenteUsuarioSerialazers(serializers.ModelSerializer):
         model = consistente.ConsistenteUsuario
         fields = [
             'id',
+<<<<<<< HEAD
             'profile_picture',
+=======
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
             'consistente_cliente',
             'consistente_cliente_serialazer',
             'user',
@@ -60,7 +75,11 @@ class BancoSerialazers(serializers.ModelSerializer):
     consistente_cliente_serialazer = ConsistenteClienteSerialazers(read_only=True, source='consistente_cliente')
     create_user_serialazer = UserSerialazers(read_only=True)
     assign_user_serialazer = UserSerialazers(read_only=True)
+<<<<<<< HEAD
     allowed_users = serializers.PrimaryKeyRelatedField(queryset=user.objects.all(), many=True, required=False, write_only=True)
+=======
+    allowed_users = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True, required=False, write_only=True)
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
     allowed_users_display = UserSerialazers(many=True, read_only=True, source='allowed_users')
     tipomovDisplay_serialazer = serializers.SerializerMethodField()
     tipocontaDisplay_serialazer = serializers.SerializerMethodField()
@@ -236,6 +255,7 @@ class DiarioSerialazers(serializers.ModelSerializer):
         banco_rec = validated_data.pop('banco_rec', None)
         instance = super().create(validated_data)
         instance.banco_rec = banco_rec
+<<<<<<< HEAD
         return instance
     
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -250,3 +270,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         if self.user:
             data['username'] = self.user.username
         return data
+=======
+        return instance
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)

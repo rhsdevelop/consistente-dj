@@ -1,6 +1,9 @@
 import django.contrib.auth.views
+<<<<<<< HEAD
 from django.conf import settings
 from django.conf.urls.static import static
+=======
+>>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
 from django.urls import path, include
 
 from . import views 

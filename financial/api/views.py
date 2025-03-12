@@ -678,7 +678,7 @@ class TransfirirAPIv1(ModelViewSet):
 
 class FluxoCaixaViewSet(ModelViewSet):
     queryset = models.Diario.objects.all()
-    serializer_class = serialazers.DiarioSerializer
+    serializer_class = serialazers.DiarioSerialazers
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
     
@@ -907,7 +907,7 @@ class FluxoCaixaViewSet(ModelViewSet):
 
 class ResumoDiarioViewSet(ModelViewSet):
     queryset = models.Diario.objects.none()
-    serializer_class = serialazers.DiarioSerializer
+    serializer_class = serialazers.DiarioSerialazers
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
 
@@ -1001,7 +1001,7 @@ class ResumoDiarioViewSet(ModelViewSet):
 
 class ResumoCategoriaViewSet(ModelViewSet):
     queryset = models.Diario.objects.none()
-    serializer_class = serialazers.DiarioSerializer
+    serializer_class = serialazers.DiarioSerialazers
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
 
@@ -1110,7 +1110,7 @@ class ResumoCategoriaViewSet(ModelViewSet):
 
 class ResumoParceiroViewSet(ModelViewSet):
     queryset = models.Diario.objects.none()
-    serializer_class = serialazers.DiarioSerializer
+    serializer_class = serialazers.DiarioSerialazers
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
 

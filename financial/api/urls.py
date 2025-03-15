@@ -25,7 +25,7 @@ routers.register(r'v1/resumoparceiro', views.ResumoParceiroViewSet, basename='re
 
 
 urlpatterns = [
-    path('v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('v1/token/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('v1/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('', include(routers.urls))

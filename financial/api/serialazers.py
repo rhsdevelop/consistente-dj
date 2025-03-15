@@ -1,5 +1,7 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import User
+from django.conf import settings
 from manager import models as consistente
 
 class UserSerialazers(serializers.ModelSerializer):
@@ -232,3 +234,13 @@ class DiarioSerialazers(serializers.ModelSerializer):
         instance = super().create(validated_data)
         instance.banco_rec = banco_rec
         return instance
+    
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        access_lifetime = settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME')
+        refresh_lifetime = settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME')
+        
+        data['access_token_expires_in'] = access_lifetime.total_seconds() if access_lifetime else None
+        data['refresh_token_expires_in'] = refresh_lifetime.total_seconds() if refresh_lifetime else None
+        return data

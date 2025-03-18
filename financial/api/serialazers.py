@@ -243,4 +243,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         
         data['access_token_expires_in'] = access_lifetime.total_seconds() if access_lifetime else None
         data['refresh_token_expires_in'] = refresh_lifetime.total_seconds() if refresh_lifetime else None
+
+        if self.user:
+            data['username'] = self.user.username
         return data

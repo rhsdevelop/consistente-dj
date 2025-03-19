@@ -1,4 +1,6 @@
 import django.contrib.auth.views
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path, include
 
 from . import views 
@@ -46,3 +48,6 @@ urlpatterns = [
     path('relatorio/parceiro/', views.resumo_parceiro, name='resumo_parceiro'),
     path('api/', include('api.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

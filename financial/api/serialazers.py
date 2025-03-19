@@ -40,6 +40,7 @@ class ConsistenteUsuarioSerialazers(serializers.ModelSerializer):
         model = consistente.ConsistenteUsuario
         fields = [
             'id',
+            'profile_picture',
             'consistente_cliente',
             'consistente_cliente_serialazer',
             'user',

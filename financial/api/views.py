@@ -65,7 +65,7 @@ class ClienteUserAPIv1(ModelViewSet):
                 for valor in valores:
                     q_obj |= Q(**{f"{key}__icontains": valor})
                 filter_seach &= q_obj
-        parceiros = models.ConsistenteUsuario.objects.filter(filter_seach).order_by('nome')
+        parceiros = models.ConsistenteUsuario.objects.filter(filter_seach).order_by('user')
         serialazer = self.get_serializer(parceiros, many=True)
         return Response(serialazer.data, status=status.HTTP_200_OK)
 

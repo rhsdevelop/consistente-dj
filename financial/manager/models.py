@@ -52,7 +52,7 @@ class ConsistenteUsuario(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     assign_user = models.ForeignKey(User, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='usuario_user_assign', blank=True, null=True)
     modified = models.DateTimeField(auto_now=True)
-    profile_picture = models.ImageField(upload_to='profile_picute/')
+    profile_picture = models.ImageField(upload_to='profile_picute/', blank=True, null=True)
 
     def __str__(self) -> str:
         return self.nome

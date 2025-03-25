@@ -2229,6 +2229,143 @@ def resumo_diario(request):
 
 @login_required
 @permission_required('manager.view_diario')
+def resumo_pagamentos(request):
+    filter_customer = {}
+    filter_search = {}
+    filter_initial = {}
+    soma_meses = {}
+    list_diario = []
+    if not request.user.is_staff:
+        crc_user = ConsistenteUsuario.objects.filter(user=request.user)
+        if crc_user:
+            filter_customer['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+        else:
+            messages.warning(request, 'Seu usuário não está vinculado a nenhuma conta Consistente.')
+            return redirect('/')
+    if request.GET:
+        request_get = request.GET.copy()
+        form = ResumoForm()
+        form.fields['data_inicial'].initial = request_get['data_inicial']
+        form.fields['data_final'].initial = request_get['data_final']
+        form.fields['banco'].initial = request_get['banco']
+
+        filter_banco = filter_customer.copy()
+        form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+        somente_efetuados = False
+        datadoc = 'datavenc'
+        if 'efetuados' in request.GET and request.GET['efetuados']:
+            form.fields['efetuados'].initial = request_get['efetuados']
+            somente_efetuados = True
+            datadoc = 'datapago'
+        for key, value in request.GET.items():
+            if key in ['consistente_cliente', 'banco'] and value:
+                filter_search[key] = value
+                filter_initial[key] = value
+            elif key in ['data_inicial', 'venc_inicial', 'pag_inicial'] and value:
+                chave = {
+                    'data_inicial': datadoc,
+                    'pag_inicial': 'datapago',
+                }
+                filter_search['%s__gte' % chave[key]] = value + '-01'
+                filter_initial['%s__lt' % chave[key]] = value + '-01'
+            elif key in ['data_final', 'venc_final', 'pag_final'] and value:
+                chave = {
+                    'data_final': datadoc,
+                    'pag_final': 'datapago',
+                }
+                periodo = value.split('-')
+                ano = int(periodo[0])
+                mes = int(periodo[1])
+                filter_search['%s__lte' % chave[key]] = value + '-%s' % monthrange(ano, mes)[1]
+        filter_initial['tipomov__in'] = [0, 3]
+        soma_entradas = Diario.objects.filter(**filter_customer).filter(**filter_initial)
+        filter_initial['tipomov__in'] = [1, 4]
+        soma_saidas = Diario.objects.filter(**filter_customer).filter(**filter_initial)
+        if soma_entradas:
+            soma_entradas = soma_entradas.aggregate(Sum('valor'))['valor__sum']
+        else:
+            soma_entradas = Decimal('0.00')
+        if soma_saidas:
+            soma_saidas = soma_saidas.aggregate(Sum('valor'))['valor__sum']
+        else:
+            soma_saidas = Decimal('0.00')
+        saldo_inicial = soma_entradas - soma_saidas
+        saldo_inicial = round(saldo_inicial, 2)
+        new_item = {
+            'banco': '',
+            'parceiro': '',
+            'categoria': '',
+            'valor_entra': '',
+            'valor_sai': '',
+            'valor_saldo': saldo_inicial,
+            'datavenc': '',
+            'datapago': '',
+        }
+        #list_diario.append(new_item)
+        saldo_atual = saldo_inicial
+        soma_entradas = Decimal('0.0')
+        soma_saidas = Decimal('0.0')
+        filter_search['tipomov__in'] = [1, 4]
+        filter_search['categoria__classifica'] = True
+        meses = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth(datadoc)).values('mes').annotate(Sum('valor')).order_by('mes')
+        meses = {str(x['mes'])[:7]: Decimal('0.00') for x in meses}
+        soma_meses = meses.copy()
+        diario = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth(datadoc)).values_list('categoria__categoria', 'mes').annotate(Sum('valor')).order_by('categoria__categoria', 'mes')
+        new_item = {'categoria': ''}
+        primeiro = True
+        for i in diario:
+            #valor_entra = Decimal('0.00') if i.tipomov in [1, 4] else i.valor 
+            #valor_sai = Decimal('0.00') if i.tipomov in [0, 3] else i.valor
+            #soma_entradas += valor_entra
+            #soma_saidas += valor_sai
+            #saldo_atual = saldo_atual + valor_entra - valor_sai
+            #if i.tipomov == 4 and i.descricao == '<CRED.CARD>':
+            #    nomecartao = Diario.objects.filter(origin_transfer=i.id).first().banco.nomebanco
+            #if i.tipomov == 3 and i.descricao == '<CRED.CARD>':
+            #    nomecartao = Diario.objects.filter(id=i.origin_transfer).first().banco.nomebanco
+            if i[0] != new_item['categoria']:
+                if not primeiro:
+                    list_diario.append(new_item)
+                else:
+                    primeiro = False
+                new_item = {
+                    'categoria': i[0],
+                    'meses': meses.copy()
+                }
+            soma_meses[str(i[1])[:7]] += round(i[2], 2)
+            new_item['meses'][str(i[1])[:7]] = round(i[2], 2)
+        list_diario.append(new_item)
+    else:
+        form = ResumoForm()
+        form.fields['data_inicial'].initial = date.today().replace(month=1, day=1).strftime('%Y-%m')
+        form.fields['data_final'].initial = date.today().replace(month=12, day=1).strftime('%Y-%m')
+        filter_banco = filter_customer.copy()
+        form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
+        meses = []
+        for i in range(1, 13):
+            meses.append(str(date.today().replace(day=1).replace(month=i))[:7])
+        soma_entradas = Decimal('0.00')
+        soma_saidas = Decimal('0.00')
+        saldo_atual = Decimal('0.00')
+    template = loader.get_template('relatorios/categoria.html')
+    context = {
+        'title': 'Demonstrativo - Pagamentos por Categoria',
+        'username': '%s %s' % (request.user.first_name, request.user.last_name),
+        'hoje': date.today(),
+        'list_diario': list_diario,
+        'form': form,
+        'meses': '","'.join([str(x)[:7] for x in meses]),
+        'lista_mes': [str(x)[:7] for x in meses],
+        'soma_meses': soma_meses,
+        'somente_efetuados': True,
+        'active_relatorios': 'show',
+        'active_relatorios_pagamentos': 'active',
+    }
+    return HttpResponse(template.render(context, request))
+
+
+@login_required
+@permission_required('manager.view_diario')
 def resumo_categoria(request):
     filter_customer = {}
     filter_search = {}

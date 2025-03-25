@@ -5,7 +5,11 @@
 <div class="card card mb-3">
   <div class="card-header">
     <div class="col-auto align-self-center">
+      {% if somente_efetuados %}
+      <h5 class="mb-0"><img class="me-2" src="/static/images/pay.png" alt="" width="40" />{{ title }}</h5>
+      {% else %}
       <h5 class="mb-0"><img class="me-2" src="/static/images/categoria.png" alt="" width="40" />{{ title }}</h5>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -35,6 +39,14 @@
             {% else %}
             <div class="col-lg-3">
               <br>
+            </div>
+            {% endif %}
+            {% if somente_efetuados %}
+            <div class="row">
+              <br>
+            </div>
+            <div class="col-lg-3">
+              {{ form.efetuados|bootstrap }}
             </div>
             {% endif %}
           </div>

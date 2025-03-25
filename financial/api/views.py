@@ -16,8 +16,10 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 class CustonUser(ModelViewSet):
-    queryset = get_user_model().objects.all()
     serializer_class = serialazers.UserSerialazers
+
+    def get_queryset(self):
+        return get_user_model().objects.filter(id=self.request.user.id)
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serialazers.CustomTokenObtainPairSerializer
 

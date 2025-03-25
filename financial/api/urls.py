@@ -10,6 +10,7 @@ from rest_framework_simplejwt.views import (
 app_name = 'api'
 
 routers = DefaultRouter()
+routers.register(r'v1/user', views.CustonUser, basename='custonUser')
 routers.register(r'v1/cliente', views.ClienteAPIv1)
 routers.register(r'v1/clienteuser', views.ClienteUserAPIv1)
 routers.register(r'v1/banco', views.BancoAPIv1)

@@ -1,6 +1,6 @@
 from decimal import Decimal
-
-from django.contrib.auth.models import User
+from django.conf import settings
+from django.contrib.auth.models import User, AbstractUser
 from django.db import models
 
 
@@ -31,13 +31,16 @@ RELACIONAMENTO = [
     (2, 'Fornecedor'),
 ]
 
+class ConsistenteUserCuston(AbstractUser):
+    profile_picture = models.ImageField(upload_to='profile_picute/', blank=True, null=True)
+
 class ConsistenteCliente(models.Model):
     nome = models.CharField(verbose_name='Nome', max_length=40)
     fantasia = models.CharField(verbose_name='Fantasia', max_length=80)
     doc = models.CharField(verbose_name='CNPJ/CPF', max_length=20, blank=True, null=True)
-    create_user = models.ForeignKey(User, verbose_name='Criado por', on_delete=models.PROTECT, related_name='cliente_user_create', blank=True, null=True)
+    create_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Criado por', on_delete=models.PROTECT, related_name='cliente_user_create', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
-    assign_user = models.ForeignKey(User, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='cliente_user_assign', blank=True, null=True)
+    assign_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='cliente_user_assign', blank=True, null=True)
     modified = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
@@ -46,13 +49,12 @@ class ConsistenteCliente(models.Model):
 
 class ConsistenteUsuario(models.Model):
     consistente_cliente = models.ForeignKey(ConsistenteCliente, verbose_name='Cliente do Consistente', on_delete=models.PROTECT, related_name='consistente_customer')
-    user = models.ForeignKey(User, verbose_name='Usuário associado', on_delete=models.PROTECT, related_name='consistente_user')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Usuário associado', on_delete=models.PROTECT, related_name='consistente_user')
     is_admin = models.BooleanField()
-    create_user = models.ForeignKey(User, verbose_name='Criado por', on_delete=models.PROTECT, related_name='usuario_user_create', blank=True, null=True)
+    create_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Criado por', on_delete=models.PROTECT, related_name='usuario_user_create', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
-    assign_user = models.ForeignKey(User, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='usuario_user_assign', blank=True, null=True)
+    assign_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='usuario_user_assign', blank=True, null=True)
     modified = models.DateTimeField(auto_now=True)
-    profile_picture = models.ImageField(upload_to='profile_picute/', blank=True, null=True)
 
     def __str__(self) -> str:
         return self.nome
@@ -69,10 +71,10 @@ class Banco(models.Model):
     agencia = models.CharField(verbose_name='Agência', max_length=10, blank=True, null=True)
     conta = models.CharField(verbose_name='Conta', max_length=12, blank=True, null=True)
     tipoconta = models.IntegerField(verbose_name='Modalidade', choices=TIPO_CONTA)
-    allowed_users = models.ManyToManyField(User, verbose_name='Usuários autorizados', related_name='bank_user_allowed', blank=True)  # Usuários autorizados a visualizar banco.
-    create_user = models.ForeignKey(User, verbose_name='Criado por', on_delete=models.PROTECT, related_name='bank_user_create', blank=True, null=True)
+    allowed_users = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name='Usuários autorizados', related_name='bank_user_allowed', blank=True)  # Usuários autorizados a visualizar banco.
+    create_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Criado por', on_delete=models.PROTECT, related_name='bank_user_create', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
-    assign_user = models.ForeignKey(User, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='bank_user_assign', blank=True, null=True)
+    assign_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='bank_user_assign', blank=True, null=True)
     modified = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
@@ -85,9 +87,9 @@ class Categoria(models.Model):
     tipomov = models.IntegerField(verbose_name='Tipo de Movimento', choices=TIPO_MOVIMENTO)
     limitemensal = models.DecimalField(verbose_name='Orçamento Mensal', decimal_places=2, max_digits=30, default=Decimal('0.00'))
     classifica = models.BooleanField(verbose_name='Contempla no painel')
-    create_user = models.ForeignKey(User, verbose_name='Criado por', on_delete=models.PROTECT, related_name='category_user_create', blank=True, null=True)
+    create_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Criado por', on_delete=models.PROTECT, related_name='category_user_create', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
-    assign_user = models.ForeignKey(User, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='category_user_assign', blank=True, null=True)
+    assign_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='category_user_assign', blank=True, null=True)
     modified = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
@@ -106,9 +108,9 @@ class Parceiro(models.Model):
     telefone = models.CharField(max_length=20, blank=True, null=True)
     observacao = models.TextField(blank=True, null=True)
     modo = models.IntegerField(verbose_name='Relacionamento', choices=RELACIONAMENTO)
-    create_user = models.ForeignKey(User, verbose_name='Criado por', on_delete=models.PROTECT, related_name='partner_user_create', blank=True, null=True)
+    create_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Criado por', on_delete=models.PROTECT, related_name='partner_user_create', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
-    assign_user = models.ForeignKey(User, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='partner_user_assign', blank=True, null=True)
+    assign_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='partner_user_assign', blank=True, null=True)
     modified = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
@@ -131,7 +133,7 @@ class Diario(models.Model):
     tipomov = models.IntegerField()
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT)
     origin_transfer = models.IntegerField(blank=True, null=True) # Campo pra uso interno. Inserir id do tipomov 4 (evento que paga) no tipomov 3 (evento que recebe). Para trasnferências e cartões de crédito.
-    create_user = models.ForeignKey(User, verbose_name='Criado por', on_delete=models.PROTECT, related_name='daily_user_create', blank=True, null=True)
+    create_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Criado por', on_delete=models.PROTECT, related_name='daily_user_create', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
-    assign_user = models.ForeignKey(User, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='daily_user_assign', blank=True, null=True)
+    assign_user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Modificado por', on_delete=models.PROTECT, related_name='daily_user_assign', blank=True, null=True)
     modified = models.DateTimeField(auto_now=True)

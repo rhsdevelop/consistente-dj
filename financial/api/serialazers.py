@@ -1,15 +1,17 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.conf import settings
 from manager import models as consistente
 
+user = get_user_model()
 class UserSerialazers(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = get_user_model()
         fields = [
             'id',
             'username',
+            'profile_picture'
         ]
 
 class ConsistenteClienteSerialazers(serializers.ModelSerializer):
@@ -58,7 +60,7 @@ class BancoSerialazers(serializers.ModelSerializer):
     consistente_cliente_serialazer = ConsistenteClienteSerialazers(read_only=True, source='consistente_cliente')
     create_user_serialazer = UserSerialazers(read_only=True)
     assign_user_serialazer = UserSerialazers(read_only=True)
-    allowed_users = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True, required=False, write_only=True)
+    allowed_users = serializers.PrimaryKeyRelatedField(queryset=user.objects.all(), many=True, required=False, write_only=True)
     allowed_users_display = UserSerialazers(many=True, read_only=True, source='allowed_users')
     tipomovDisplay_serialazer = serializers.SerializerMethodField()
     tipocontaDisplay_serialazer = serializers.SerializerMethodField()

@@ -77,6 +77,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'financial.wsgi.application'
 
+AUTH_USER_MODEL = 'manager.ConsistenteUserCuston'
 # Autenticação por email
 AUTHENTICATION_BACKENDS = ['financial.auth_email.EmailBackend']
 

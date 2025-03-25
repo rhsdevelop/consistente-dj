@@ -1,6 +1,7 @@
 from django.db.models import Q, Sum
 from django.db.models.functions import TruncMonth, TruncDate, TruncDay
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
@@ -14,6 +15,9 @@ from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
+class CustonUser(ModelViewSet):
+    queryset = get_user_model().objects.all()
+    serializer_class = serialazers.UserSerialazers
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serialazers.CustomTokenObtainPairSerializer
 

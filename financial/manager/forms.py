@@ -246,3 +246,4 @@ class ResumoForm(forms.Form):
         ),
         required=False,
     )
+    efetuados = forms.BooleanField(required=False, label='Somente pagamentos efetuados')

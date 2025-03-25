@@ -41,6 +41,7 @@ urlpatterns = [
     path('relatorio/caixa/', views.fluxo_caixa, name='fluxo_caixa'),
     path('relatorio/caixa/<int:diario_id>/pagar/', views.pagar_fluxo_caixa, name='pagar_fluxo_caixa'),
     path('relatorio/diario/', views.resumo_diario, name='resumo_diario'),
+    path('relatorio/pagamentos/', views.resumo_pagamentos, name='resumo_pagamentos'),
     path('relatorio/categoria/', views.resumo_categoria, name='resumo_categoria'),
     path('relatorio/parceiro/', views.resumo_parceiro, name='resumo_parceiro'),
 ]

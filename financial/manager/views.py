@@ -1887,6 +1887,7 @@ def list_cartoes(request):
     else:
         form = FindDiarioForm()
         filter_search['datadoc__range'] = date.today().replace(day=1), date.today().replace(day=monthrange(date.today().year, date.today().month)[1])
+    crc_user = None
     if not request.user.is_staff:
         crc_user = ConsistenteUsuario.objects.filter(user=request.user)
         if crc_user:
@@ -1925,10 +1926,10 @@ def list_cartoes(request):
             filter_search['%s_id__in' % key] = value
         if key in ['banco_rec'] and value:
             filter_cartao = filter_search.copy()
-            filter_cartao['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
+            if crc_user:
+                filter_cartao['consistente_cliente_id'] = crc_user.first().consistente_cliente_id
             filter_cartao['tipomov__in'] = [3]
             filter_cartao['banco_id'] = value
-            print(filter_cartao)
             cartao = [x.origin_transfer for x in Diario.objects.filter(**filter_cartao).filter(descricao='<CRED.CARD>').order_by('datadoc')]
             filter_search['id__in'] = cartao
     list_transfere = Diario.objects.filter(**filter_customer).filter(**filter_search).filter(descricao='<CRED.CARD>').order_by('datadoc')

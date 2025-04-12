@@ -788,9 +788,9 @@ class CartoesAPIv1(ModelViewSet):
         }
         return Response(data, status=status.HTTP_200_OK)
 
-class FluxoCaixaViewSet(ModelViewSet):
+class FluxoCaixaAPIv1(ModelViewSet):
     queryset = models.Diario.objects.all()
-    serializer_class = serialazers.DiarioSerializer
+    serializer_class = serialazers.DiarioSerialazers
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
     
@@ -1016,9 +1016,9 @@ class FluxoCaixaViewSet(ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-class ResumoDiarioViewSet(ModelViewSet):
+class ResumoDiarioAPIv1(ModelViewSet):
     queryset = models.Diario.objects.none()
-    serializer_class = serialazers.DiarioSerializer
+    serializer_class = serialazers.DiarioSerialazers
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
 
@@ -1110,9 +1110,9 @@ class ResumoDiarioViewSet(ModelViewSet):
         }
         return Response(retorno, status=status.HTTP_200_OK)
 
-class ResumoCategoriaViewSet(ModelViewSet):
+class ResumoCategoriaAPIv1(ModelViewSet):
     queryset = models.Diario.objects.none()
-    serializer_class = serialazers.DiarioSerializer
+    serializer_class = serialazers.DiarioSerialazers
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
 
@@ -1219,9 +1219,9 @@ class ResumoCategoriaViewSet(ModelViewSet):
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
-class ResumoParceiroViewSet(ModelViewSet):
+class ResumoParceiroAPIv1(ModelViewSet):
     queryset = models.Diario.objects.none()
-    serializer_class = serialazers.DiarioSerializer
+    serializer_class = serialazers.DiarioSerialazers
     pagination_class = DefaultPagination
     permission_classes = [IsAuthenticated]
 

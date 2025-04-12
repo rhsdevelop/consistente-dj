@@ -128,14 +128,14 @@ class BancoAPIv1(ModelViewSet):
             else:
                 return Response({"error": "Seu usuário não está vinculado a nenhuma conta."},
                                 status=status.HTTP_403_FORBIDDEN)
-        for key in ['consistente_cliente', 'nome', 'tipomov']:
+        for key in ['consistente_cliente', 'nomebanco', 'tipomov']:
             valores = request.GET.getlist(key)
             if valores:
                 q_obj = Q()
                 for valor in valores:
                     q_obj |= Q(**{f"{key}__icontains": valor})
                 filter_seach &= q_obj
-        parceiros = models.ConsistenteUsuario.objects.filter(filter_seach).order_by('nome')
+        parceiros = models.Banco.objects.filter(filter_seach).order_by('consistente_cliente')
         serialazer = self.get_serializer(parceiros, many=True)
         return Response(serialazer.data, status=status.HTTP_200_OK)
 
@@ -697,7 +697,110 @@ class TransfirirAPIv1(ModelViewSet):
             "soma": round(soma, 2),
             "data": serializer.data
         }, status=status.HTTP_200_OK)
-    
+
+class CartoesAPIv1(ModelViewSet):
+    queryset = models.Diario.objects.all()
+    serializer_class = serialazers.DiarioSerialazers
+    pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        filter_search = Q()
+        if not self.request.user.is_staff:
+            crc_user = models.ConsistenteUsuario.objects.filter(user=self.request.user).first()
+            if crc_user:
+                filter_search &= Q(consistente_cliente_id=crc_user.consistente_cliente_id)
+            else:
+                return models.Diario.objects.none()
+        return models.Diario.objects.filter(filter_search).order_by('datadoc')
+
+    def update(self, request, *args, **kwargs):
+        try:
+            diario_id = kwargs.get('pk')
+            cartao = models.Diario.objects.get(id=diario_id)
+            if not request.user.is_staff:
+                crc_user = models.ConsistenteUsuario.objects.filter(user=request.user).first()
+                if crc_user:
+                    if cartao.consistente_cliente_id != crc_user.consistente_cliente_id:
+                        return Response({"error": "Você não tem permissão para editar este cartão."},
+                                        status=status.HTTP_403_FORBIDDEN)
+            serializer = serialazers.DiarioSerialazers(cartao, data=request.data, partial=True)
+            if serializer.is_valid():
+                updated_cartao = serializer.save(assign_user=request.user)
+                if 'datapago' in request.data:
+                    cartao_rec = models.Diario.objects.get(origin_transfer=diario_id)
+                    cartao_rec.datapago = request.data.get('datapago', None)
+                    cartao_rec.save()
+
+                    cartao.datapago = cartao_rec.datapago
+                    cartao.save()
+
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({"error": "Erro na validação dos dados."}, status=status.HTTP_400_BAD_REQUEST)
+
+        except models.Diario.DoesNotExist:
+            return Response({"error": "Cartão de crédito não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    def list(self, request, *args, **kwargs):
+        filter_search = Q(descricao='<CRED.CARD>')
+        filter_customer = {}
+
+        if not request.user.is_staff:
+            crc_user = models.ConsistenteUsuario.objects.filter(user=request.user).first()
+            if crc_user:
+                filter_customer['consistente_cliente_id'] = crc_user.consistente_cliente_id
+            else:
+                return Response(
+                    {'detail': 'Seu usuário não está vinculado a nenhuma conta Consistente.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+        data_inicial = request.GET.get('data_inicial')
+        data_final = request.GET.get('data_final')
+        if data_inicial:
+            filter_search &= Q(datadoc__gte=data_inicial)
+        if data_final:
+            filter_search &= Q(datadoc__lte=data_final)
+
+        for key, value in request.GET.items():
+            if key in ['consistente_cliente', 'banco'] and value:
+                filter_search &= Q(**{key: value})
+            elif key in ['venc_inicial', 'venc_final', 'pag_inicial', 'pag_final'] and value:
+                chave = {
+                    'venc_inicial': 'datavenc',
+                    'pag_inicial': 'datapago',
+                    'venc_final': 'datavenc',
+                    'pag_final': 'datapago',
+                }
+                if key in chave:
+                    filter_search &= Q(**{f"{chave[key]}__gte" if 'inicial' in key else f"{chave[key]}__lte": value})
+
+        list_cartoes = models.Diario.objects.filter(filter_search).filter(**filter_customer).order_by('datadoc')
+
+        if not list_cartoes.exists():
+            return Response({'detail': 'Nenhum cartão encontrado para os filtros aplicados.'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        data = []
+        for cartao in list_cartoes:
+            new_item = {
+                'id': cartao.id,
+                'datadoc': cartao.datadoc,
+                'banco': cartao.banco.nomebanco if cartao.banco else None,
+                'descricao': cartao.descricao,
+                'valor': str(cartao.valor),
+                'datavenc': cartao.datavenc,
+                'datapago': cartao.datapago,
+            }
+            data.append(new_item)
+
+        soma = str(sum([Decimal(c['valor']) for c in data]))
+        data = {
+            'list_cartoes': data,
+            'soma': soma,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
 
 <<<<<<< HEAD
 class FluxoCaixaAPIv1(ModelViewSet):

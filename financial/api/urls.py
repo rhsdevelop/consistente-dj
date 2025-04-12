@@ -27,6 +27,7 @@ routers.register(r'v1/fluxo', views.FluxoCaixaAPIv1, basename='fluxo')
 routers.register(r'v1/resumodiario', views.ResumoDiarioAPIv1, basename='resumoDiario')
 routers.register(r'v1/resumocategoria', views.ResumoCategoriaAPIv1, basename='resumoCategoria')
 routers.register(r'v1/resumoparceiro', views.ResumoParceiroAPIv1, basename='resumoParceiro')
+routers.register(r'v1/cartoes', views.CartoesAPIv1, basename='cartoes')
 
 
 urlpatterns = [

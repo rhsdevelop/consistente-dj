@@ -919,8 +919,8 @@ class FluxoCaixaAPIv1(ModelViewSet):
                 new_item = {
                     'id': i.id,
                     'banco': str(i.banco.nomebanco) if i.banco else None,
-                    'parceiro': i.parceiro if i.descricao != '<CRED.CARD>' else nomecartao,
-                    'categoria': (i.categoria if i.descricao != '<CRED.CARD>'
+                    'parceiro': str(i.parceiro) if i.descricao != '<CRED.CARD>' else nomecartao,
+                    'categoria': (str(i.categoria) if i.descricao != '<CRED.CARD>'
                                 else 'Cartão de Crédito'),
                     'valor_entra': str(valor_entra) if valor_entra else '',
                     'valor_sai': str(valor_sai) if valor_sai else '',

@@ -742,6 +742,10 @@ class CartoesAPIv1(ModelViewSet):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
+        banco_rec = request.GET.get('banco_rec')
+        if banco_rec:
+            filter_search &= Q(banco_id=banco_rec, tipomov=3)
+
         data_inicial = request.GET.get('data_inicial')
         data_final = request.GET.get('data_final')
         if data_inicial:

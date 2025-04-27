@@ -1,12 +1,9 @@
 asgiref==3.8.1
-<<<<<<< HEAD
 Django==5.1.5
-=======
-Django==4.0
->>>>>>> 65ab2d5 (Implementação da estrutura inicial da API financeira com modelos, rotas e configuração de autenticação JWT.)
 django-bootstrap-form==3.4
 djangorestframework==3.15.2
 djangorestframework_simplejwt==5.4.0
+pillow==11.1.0
 PyJWT==2.10.1
 python-dotenv==1.0.1
 sqlparse==0.5.0

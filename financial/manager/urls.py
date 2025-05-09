@@ -1,7 +1,10 @@
 import django.contrib.auth.views
-from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
+from django.urls import path, include
 
 from . import views 
+import api
 
 app_name = 'manager'
 urlpatterns = [
@@ -44,4 +47,8 @@ urlpatterns = [
     path('relatorio/pagamentos/', views.resumo_pagamentos, name='resumo_pagamentos'),
     path('relatorio/categoria/', views.resumo_categoria, name='resumo_categoria'),
     path('relatorio/parceiro/', views.resumo_parceiro, name='resumo_parceiro'),
+    path('api/', include('api.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

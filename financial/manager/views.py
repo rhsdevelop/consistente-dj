@@ -606,7 +606,7 @@ def list_parceiro(request):
     for key, value in request.GET.items():
         if key in ['consistente_cliente'] and value:
             filter_search[key] = value
-        if key in ['nomeparceiro', 'tipomov', 'doc'] and value:
+        if key in ['nome', 'nomecompleto', 'tipo', 'doc'] and value:
             filter_search['%s__icontains' % key] = value
     list_parceiro = Parceiro.objects.filter(**filter_search).order_by('nome')
     template = loader.get_template('parceiro/list.html')

@@ -493,8 +493,12 @@ def add_parceiro(request):
                 item.consistente_cliente = crc_user.first().consistente_cliente
         item.create_user = request.user
         item.assign_user = request.user
-        item.save()
-        messages.success(request, 'Registro adicionado com sucesso.')
+        parceiro_dup = Parceiro.objects.filter(consistente_cliente_id=item.consistente_cliente_id, nome=item.nome)
+        if not parceiro_dup:
+            item.save()
+            messages.success(request, 'Registro adicionado com sucesso.')
+        else:
+            messages.error(request, 'Registro não foi criado. Esse parceiro já existe.')
         path = request.GET.get('next', None)
         if path:
             return redirect(path)
@@ -535,8 +539,12 @@ def edit_parceiro(request, parceiro_id):
         form = AddParceiroForm(request.POST, instance=parceiro)
         item = form.save(commit=False)
         item.assign_user = request.user
-        item.save()
-        messages.success(request, 'Registro alterado com sucesso.')
+        parceiro_dup = Parceiro.objects.filter(consistente_cliente_id=item.consistente_cliente_id, nome=item.nome).exclude(id=parceiro.id)
+        if not parceiro_dup:
+            item.save()
+            messages.success(request, 'Registro alterado com sucesso.')
+        else:
+            messages.error(request, 'Registro não foi alterado. Nome já existe em outro fornecedor.')
         path = request.GET.get('next', None)
         if path:
             return redirect(path)

@@ -1967,9 +1967,7 @@ def list_cartoes(request):
     soma_assinatura = Decimal('0.0')
     list_transfere = Diario.objects.filter(**filter_customer).filter(**filter_search).filter(descricao='<CRED.CARD>').order_by('datadoc')
     if not assinatura:
-        if 'datadoc__range' in filter_search: del filter_search['datadoc__range']
-        if 'datadoc__gte' in filter_search: del filter_search['datadoc__gte']
-        if 'datadoc__lte' in filter_search: del filter_search['datadoc__lte']
+        filter_search = {}
         filter_search['datadoc__gt'] = date.today()
         filter_search['tipomov__in'] = [1]
         filter_search['banco__tipomov'] = 2

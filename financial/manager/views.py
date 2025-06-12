@@ -1971,10 +1971,9 @@ def list_cartoes(request):
         if 'datadoc__gte' in filter_search: del filter_search['datadoc__gte']
         if 'datadoc__lte' in filter_search: del filter_search['datadoc__lte']
         filter_search['datadoc__gt'] = date.today()
-        filter_search['tipomov__in'] = [1] 
-        list_assinatura = Diario.objects.filter(**filter_search).annotate(mes=TruncDate('datavenc')).values('mes').annotate(Sum('valor'))
-        print(list_assinatura)
-        soma_assinatura = Diario.objects.filter(**filter_search).aggregate(Sum('valor'))['valor__sum']
+        filter_search['tipomov__in'] = [1]
+        filter_search['banco__tipomov'] = 2
+        list_assinatura = Diario.objects.filter(**filter_search).values('banco_id', 'datavenc').annotate(Sum('valor'))
     try:
         soma = round(list_transfere.aggregate(Sum('valor'))['valor__sum'], 2) - Decimal('0.0') if not soma_assinatura else soma_assinatura
     except:
@@ -1984,8 +1983,9 @@ def list_cartoes(request):
         valor = item.valor
         if not assinatura:
             for i in list_assinatura:
-                if item.datavenc == i['mes']:
+                if str(item.datavenc) == str(i['datavenc']) and Diario.objects.get(origin_transfer=item.id, tipomov=3).banco.id == i['banco_id']:
                     valor -= i['valor__sum']
+                    soma -= i['valor__sum']
         new_item = {
             'id': item.id,
             'datadoc': item.datadoc,

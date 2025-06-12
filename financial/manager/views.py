@@ -1911,6 +1911,7 @@ def edit_cartoes(request, diario_id):
 def list_cartoes(request):
     filter_customer = {}
     filter_search = {}
+    assinatura = False
     if request.GET:
         form = FindDiarioForm(request.GET)
     else:
@@ -1953,6 +1954,8 @@ def list_cartoes(request):
         elif key in ['parceiro', 'categoria'] and value:
             value = request.GET.getlist(key)
             filter_search['%s_id__in' % key] = value
+        elif key in ['com_assinatura'] and value:
+            assinatura = True
         if key in ['banco_rec'] and value:
             filter_cartao = filter_search.copy()
             if crc_user:
@@ -1961,20 +1964,35 @@ def list_cartoes(request):
             filter_cartao['banco_id'] = value
             cartao = [x.origin_transfer for x in Diario.objects.filter(**filter_cartao).filter(descricao='<CRED.CARD>').order_by('datadoc')]
             filter_search['id__in'] = cartao
+    soma_assinatura = Decimal('0.0')
     list_transfere = Diario.objects.filter(**filter_customer).filter(**filter_search).filter(descricao='<CRED.CARD>').order_by('datadoc')
+    if not assinatura:
+        if 'datadoc__range' in filter_search: del filter_search['datadoc__range']
+        if 'datadoc__gte' in filter_search: del filter_search['datadoc__gte']
+        if 'datadoc__lte' in filter_search: del filter_search['datadoc__lte']
+        filter_search['datadoc__gt'] = date.today()
+        filter_search['tipomov__in'] = [1] 
+        list_assinatura = Diario.objects.filter(**filter_search).annotate(mes=TruncDate('datavenc')).values('mes').annotate(Sum('valor'))
+        print(list_assinatura)
+        soma_assinatura = Diario.objects.filter(**filter_search).aggregate(Sum('valor'))['valor__sum']
     try:
-        soma = round(list_transfere.aggregate(Sum('valor'))['valor__sum'], 2)
+        soma = round(list_transfere.aggregate(Sum('valor'))['valor__sum'], 2) - Decimal('0.0') if not soma_assinatura else soma_assinatura
     except:
         soma = Decimal('0.00')
     list_cartoes = []
     for item in list_transfere:
+        valor = item.valor
+        if not assinatura:
+            for i in list_assinatura:
+                if item.datavenc == i['mes']:
+                    valor -= i['valor__sum']
         new_item = {
             'id': item.id,
             'datadoc': item.datadoc,
             'banco': item.banco,
             'banco_rec': Diario.objects.get(origin_transfer=item.id, tipomov=3).banco,
             'descricao': item.descricao,
-            'valor': item.valor,
+            'valor': valor,
             'datavenc': item.datavenc,
             'datapago': item.datapago,
         }

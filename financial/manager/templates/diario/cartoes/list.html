@@ -51,6 +51,9 @@
             <div class="col-lg-3">
               {{ form.banco_rec|bootstrap }}
             </div>
+            <div class="col-lg-3">
+              {{ form.com_assinatura|bootstrap }}
+            </div>
             {% if request.user.is_staff %}
             <div class="col-lg-3">
               {{ form.consistente_cliente|bootstrap }}

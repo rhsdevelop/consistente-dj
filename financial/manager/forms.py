@@ -201,6 +201,7 @@ class FindDiarioForm(forms.Form):
         ),
         required=False,
     )
+    com_assinatura = forms.BooleanField(required=False, label='Exibir valor considerando assinaturas.')
 
 
 class FluxoCaixaForm(forms.Form):

@@ -247,3 +247,4 @@ class ResumoForm(forms.Form):
         required=False,
     )
     efetuados = forms.BooleanField(required=False, label='Somente pagamentos efetuados')
+    orcado = forms.BooleanField(required=False, label='Incluir limite mensal orçado') # Incluir limite mensal orçado.

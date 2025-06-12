@@ -1147,6 +1147,13 @@ def add_pagar(request):
                         }
                         atualiza_cartao(**dados_cartao)
             messages.success(request, 'Registro adicionado com sucesso.')
+            categoria = item.categoria
+            year = item.datadoc.year
+            month = item.datadoc.month
+            selecao_data = item.datadoc.replace(day=1), item.datadoc.replace(day=monthrange(year, month)[1])
+            soma_categoria = Diario.objects.filter(categoria=categoria, datadoc__range=selecao_data).aggregate(Sum('valor'))['valor__sum']
+            if soma_categoria > categoria.limitemensal:
+                messages.warning(request, 'Você estourou seu orçamento do mês na categoria %s.' % categoria.categoria)
         else:
             messages.error(request, form.errors)
         path = request.GET.get('next', None)
@@ -1307,6 +1314,13 @@ def edit_pagar(request, diario_id):
                     atualiza_cartao(**dados_cartao)
             #########
             messages.success(request, 'Registro alterado com sucesso.')
+            categoria = item.categoria
+            year = item.datadoc.year
+            month = item.datadoc.month
+            selecao_data = item.datadoc.replace(day=1), item.datadoc.replace(day=monthrange(year, month)[1])
+            soma_categoria = Diario.objects.filter(categoria=categoria, datadoc__range=selecao_data).aggregate(Sum('valor'))['valor__sum']
+            if soma_categoria > categoria.limitemensal:
+                messages.warning(request, 'Você estourou seu orçamento do mês na categoria %s.' % categoria.categoria)
         else:
             messages.error(request, form.errors)
         path = request.GET.get('next', None)
@@ -1469,6 +1483,13 @@ def duplica_pagar(request, diario_id):
                         }
                         atualiza_cartao(**dados_cartao)
             messages.success(request, 'Registro adicionado com sucesso.')
+            categoria = item.categoria
+            year = item.datadoc.year
+            month = item.datadoc.month
+            selecao_data = item.datadoc.replace(day=1), item.datadoc.replace(day=monthrange(year, month)[1])
+            soma_categoria = Diario.objects.filter(categoria=categoria, datadoc__range=selecao_data).aggregate(Sum('valor'))['valor__sum']
+            if soma_categoria > categoria.limitemensal:
+                messages.warning(request, 'Você estourou seu orçamento do mês na categoria %s.' % categoria.categoria)
         else:
             messages.error(request, form.errors)
         path = request.GET.get('next', None)
@@ -2257,6 +2278,12 @@ def resumo_pagamentos(request):
         form.fields['data_inicial'].initial = request_get['data_inicial']
         form.fields['data_final'].initial = request_get['data_final']
         form.fields['banco'].initial = request_get['banco']
+        orcado = False
+        if 'orcado' in request_get:
+            form.fields['orcado'].initial = request_get['orcado']
+            orcado = True
+            valor_orcado = Categoria.objects.filter(limitemensal__gt=Decimal('0.0'))
+
 
         filter_banco = filter_customer.copy()
         form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
@@ -2316,9 +2343,18 @@ def resumo_pagamentos(request):
         soma_saidas = Decimal('0.0')
         filter_search['tipomov__in'] = [1, 4]
         filter_search['categoria__classifica'] = True
-        meses = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth(datadoc)).values('mes').annotate(Sum('valor')).order_by('mes')
-        meses = {str(x['mes'])[:7]: Decimal('0.00') for x in meses}
-        soma_meses = meses.copy()
+        if orcado:
+            meses = {}
+            data_atual = datetime.strptime(request_get['data_inicial'], '%Y-%m')
+            while data_atual <= datetime.strptime(request_get['data_final'], '%Y-%m'):
+                if data_atual.day == 1:
+                    meses[data_atual.strftime('%Y-%m')] = Decimal('0.00')
+                data_atual += timedelta(days=1) # Adiciona um dia à data atual
+            soma_meses = meses.copy()
+        else:
+            meses = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth(datadoc)).values('mes').annotate(Sum('valor')).order_by('mes')
+            meses = {str(x['mes'])[:7]: Decimal('0.00') for x in meses}
+            soma_meses = meses.copy()
         diario = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth(datadoc)).values_list('categoria__categoria', 'mes').annotate(Sum('valor')).order_by('categoria__categoria', 'mes')
         new_item = {'categoria': ''}
         primeiro = True
@@ -2344,6 +2380,15 @@ def resumo_pagamentos(request):
             soma_meses[str(i[1])[:7]] += round(i[2], 2)
             new_item['meses'][str(i[1])[:7]] = round(i[2], 2)
         list_diario.append(new_item)
+        for i in list_diario:
+            categ = i['categoria']
+            if 'meses' in i:
+                for mes in i['meses']:
+                    valor_mes = i['meses'][mes]
+                    if orcado and date.today().replace(day=1) <= datetime.strptime(mes, '%Y-%m').date() and valor_orcado.filter(categoria=categ):
+                        if valor_orcado.filter(categoria=categ)[0].limitemensal > valor_mes:
+                            i['meses'][mes] = valor_orcado.filter(categoria=categ)[0].limitemensal
+                            soma_meses[mes] += valor_orcado.filter(categoria=categ)[0].limitemensal
     else:
         form = ResumoForm()
         form.fields['data_inicial'].initial = date.today().replace(month=1, day=1).strftime('%Y-%m')
@@ -2394,6 +2439,11 @@ def resumo_categoria(request):
         form.fields['data_inicial'].initial = request_get['data_inicial']
         form.fields['data_final'].initial = request_get['data_final']
         form.fields['banco'].initial = request_get['banco']
+        orcado = False
+        if 'orcado' in request_get:
+            form.fields['orcado'].initial = request_get['orcado']
+            orcado = True
+            valor_orcado = Categoria.objects.filter(limitemensal__gt=Decimal('0.0'))
 
         filter_banco = filter_customer.copy()
         form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
@@ -2447,9 +2497,18 @@ def resumo_categoria(request):
         soma_saidas = Decimal('0.0')
         filter_search['tipomov__in'] = [1, 4]
         filter_search['categoria__classifica'] = True
-        meses = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth('datadoc')).values('mes').annotate(Sum('valor')).order_by('mes')
-        meses = {str(x['mes'])[:7]: Decimal('0.00') for x in meses}
-        soma_meses = meses.copy()
+        if orcado:
+            meses = {}
+            data_atual = datetime.strptime(request_get['data_inicial'], '%Y-%m')
+            while data_atual <= datetime.strptime(request_get['data_final'], '%Y-%m'):
+                if data_atual.day == 1:
+                    meses[data_atual.strftime('%Y-%m')] = Decimal('0.00')
+                data_atual += timedelta(days=1) # Adiciona um dia à data atual
+            soma_meses = meses.copy()
+        else:
+            meses = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth('datadoc')).values('mes').annotate(Sum('valor')).order_by('mes')
+            meses = {str(x['mes'])[:7]: Decimal('0.00') for x in meses}
+            soma_meses = meses.copy()
         diario = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth('datadoc')).values_list('categoria__categoria', 'mes').annotate(Sum('valor')).order_by('categoria__categoria', 'mes')
         new_item = {'categoria': ''}
         primeiro = True
@@ -2475,6 +2534,15 @@ def resumo_categoria(request):
             soma_meses[str(i[1])[:7]] += round(i[2], 2)
             new_item['meses'][str(i[1])[:7]] = round(i[2], 2)
         list_diario.append(new_item)
+        for i in list_diario:
+            categ = i['categoria']
+            if 'meses' in i:
+                for mes in i['meses']:
+                    valor_mes = i['meses'][mes]
+                    if orcado and date.today().replace(day=1) <= datetime.strptime(mes, '%Y-%m').date() and valor_orcado.filter(categoria=categ):
+                        if valor_orcado.filter(categoria=categ)[0].limitemensal > valor_mes:
+                            i['meses'][mes] = valor_orcado.filter(categoria=categ)[0].limitemensal
+                            soma_meses[mes] += valor_orcado.filter(categoria=categ)[0].limitemensal
     else:
         form = ResumoForm()
         form.fields['data_inicial'].initial = date.today().replace(month=1, day=1).strftime('%Y-%m')

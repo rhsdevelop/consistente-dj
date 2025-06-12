@@ -40,11 +40,14 @@
             <div class="col-lg-3">
               <br>
             </div>
-            {% endif %}
-            {% if somente_efetuados %}
             <div class="row">
               <br>
             </div>
+            {% endif %}
+            <div class="col-lg-3">
+              {{ form.orcado|bootstrap }}
+            </div>
+            {% if somente_efetuados %}
             <div class="col-lg-3">
               {{ form.efetuados|bootstrap }}
             </div>

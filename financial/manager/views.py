@@ -2280,6 +2280,7 @@ def resumo_pagamentos(request):
     filter_search = {}
     filter_initial = {}
     soma_meses = {}
+    saldo_meses = {}
     list_diario = []
     if not request.user.is_staff:
         crc_user = ConsistenteUsuario.objects.filter(user=request.user)
@@ -2329,6 +2330,8 @@ def resumo_pagamentos(request):
                 ano = int(periodo[0])
                 mes = int(periodo[1])
                 filter_search['%s__lte' % chave[key]] = value + '-%s' % monthrange(ano, mes)[1]
+        if not 'banco' in filter_search:
+            filter_initial['banco__tipomov__in'] = [0, 1]
         filter_initial['tipomov__in'] = [0, 3]
         soma_entradas = Diario.objects.filter(**filter_customer).filter(**filter_initial)
         filter_initial['tipomov__in'] = [1, 4]
@@ -2366,12 +2369,20 @@ def resumo_pagamentos(request):
                 if data_atual.day == 1:
                     meses[data_atual.strftime('%Y-%m')] = Decimal('0.00')
                 data_atual += timedelta(days=1) # Adiciona um dia à data atual
+            saldo_meses = meses.copy()
             soma_meses = meses.copy()
         else:
             meses = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth(datadoc)).values('mes').annotate(Sum('valor')).order_by('mes')
             meses = {str(x['mes'])[:7]: Decimal('0.00') for x in meses}
+            saldo_meses = meses.copy()
             soma_meses = meses.copy()
         diario = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth(datadoc)).values_list('categoria__categoria', 'mes').annotate(Sum('valor')).order_by('categoria__categoria', 'mes')
+        filter_search['tipomov__in'] = [1, 4]
+        filter_search['categoria__classifica'] = False
+        diario_pag = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth(datadoc)).values_list('mes').annotate(Sum('valor')).order_by('mes')
+        filter_search['tipomov__in'] = [0, 3]
+        del filter_search['categoria__classifica']
+        diario_rec = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth(datadoc)).values_list('mes').annotate(Sum('valor')).order_by('mes')
         new_item = {'categoria': ''}
         primeiro = True
         for i in diario:
@@ -2405,6 +2416,19 @@ def resumo_pagamentos(request):
                         if valor_orcado.filter(categoria=categ)[0].limitemensal > valor_mes:
                             i['meses'][mes] = valor_orcado.filter(categoria=categ)[0].limitemensal
                             soma_meses[mes] += valor_orcado.filter(categoria=categ)[0].limitemensal
+        if not 'banco' in filter_search:
+            for mes in saldo_meses.keys():
+                for i in list_diario:
+                    saldo_atual -= i['meses'][mes]
+                for i in diario_rec:
+                    if str(i[0])[0:7] == mes:
+                        saldo_atual += i[1]
+                for i in diario_pag:
+                    if str(i[0])[0:7] == mes:
+                        saldo_atual -= i[1]
+                saldo_meses[mes] = Decimal(round(saldo_atual, 2))
+        else:
+            saldo_meses = None
     else:
         form = ResumoForm()
         form.fields['data_inicial'].initial = date.today().replace(month=1, day=1).strftime('%Y-%m')
@@ -2419,7 +2443,7 @@ def resumo_pagamentos(request):
         saldo_atual = Decimal('0.00')
     template = loader.get_template('relatorios/categoria.html')
     context = {
-        'title': 'Demonstrativo - Pagamentos por Categoria',
+        'title': 'Demonstrativo - Pagamentos por Categoria e Previsão de Saldo',
         'username': '%s %s' % (request.user.first_name, request.user.last_name),
         'hoje': date.today(),
         'list_diario': list_diario,
@@ -2427,6 +2451,7 @@ def resumo_pagamentos(request):
         'meses': '","'.join([str(x)[:7] for x in meses]),
         'lista_mes': [str(x)[:7] for x in meses],
         'soma_meses': soma_meses,
+        'saldo_meses': saldo_meses,
         'somente_efetuados': True,
         'active_relatorios': 'show',
         'active_relatorios_pagamentos': 'active',

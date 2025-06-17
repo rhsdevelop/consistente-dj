@@ -96,6 +96,14 @@
               <td class="text-900" align="right"{% if valor < 0 %} style="color:red"{% endif %}>{{ valor }}</td>
               {% endfor %}
             </tr>
+            {% if saldo_meses %}
+            <tr>
+              <td class="text-900" >SALDO FINAL</td>
+              {% for mes, valor in saldo_meses.items %}
+              <td class="text-900" align="right"{% if valor < 0 %} style="color:red"{% endif %}>{{ valor }}</td>
+              {% endfor %}
+            </tr>
+            {% endif %}
           </tfoot>
           {% endif %}
           {% endif %}

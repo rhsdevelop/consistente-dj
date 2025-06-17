@@ -2300,8 +2300,6 @@ def resumo_pagamentos(request):
             form.fields['orcado'].initial = request_get['orcado']
             orcado = True
             valor_orcado = Categoria.objects.filter(limitemensal__gt=Decimal('0.0'))
-
-
         filter_banco = filter_customer.copy()
         form.fields['banco'].queryset = Banco.objects.filter(**filter_banco).order_by('nomebanco')
         somente_efetuados = False
@@ -2332,6 +2330,7 @@ def resumo_pagamentos(request):
                 filter_search['%s__lte' % chave[key]] = value + '-%s' % monthrange(ano, mes)[1]
         if not 'banco' in filter_search:
             filter_initial['banco__tipomov__in'] = [0, 1]
+            filter_search['banco__tipomov__in'] = [0, 1]
         filter_initial['tipomov__in'] = [0, 3]
         soma_entradas = Diario.objects.filter(**filter_customer).filter(**filter_initial)
         filter_initial['tipomov__in'] = [1, 4]

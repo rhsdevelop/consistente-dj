@@ -1152,7 +1152,7 @@ def add_pagar(request):
             month = item.datadoc.month
             selecao_data = item.datadoc.replace(day=1), item.datadoc.replace(day=monthrange(year, month)[1])
             soma_categoria = Diario.objects.filter(categoria=categoria, datadoc__range=selecao_data).aggregate(Sum('valor'))['valor__sum']
-            if soma_categoria > categoria.limitemensal:
+            if categoria.classifica and categoria.limitemensal and soma_categoria > categoria.limitemensal:
                 messages.warning(request, 'Você estourou seu orçamento do mês na categoria %s.' % categoria.categoria)
         else:
             messages.error(request, form.errors)
@@ -1319,7 +1319,7 @@ def edit_pagar(request, diario_id):
             month = item.datadoc.month
             selecao_data = item.datadoc.replace(day=1), item.datadoc.replace(day=monthrange(year, month)[1])
             soma_categoria = Diario.objects.filter(categoria=categoria, datadoc__range=selecao_data).aggregate(Sum('valor'))['valor__sum']
-            if soma_categoria > categoria.limitemensal:
+            if categoria.classifica and categoria.limitemensal and soma_categoria > categoria.limitemensal:
                 messages.warning(request, 'Você estourou seu orçamento do mês na categoria %s.' % categoria.categoria)
         else:
             messages.error(request, form.errors)
@@ -1488,7 +1488,7 @@ def duplica_pagar(request, diario_id):
             month = item.datadoc.month
             selecao_data = item.datadoc.replace(day=1), item.datadoc.replace(day=monthrange(year, month)[1])
             soma_categoria = Diario.objects.filter(categoria=categoria, datadoc__range=selecao_data).aggregate(Sum('valor'))['valor__sum']
-            if soma_categoria > categoria.limitemensal:
+            if categoria.classifica and categoria.limitemensal and soma_categoria > categoria.limitemensal:
                 messages.warning(request, 'Você estourou seu orçamento do mês na categoria %s.' % categoria.categoria)
         else:
             messages.error(request, form.errors)

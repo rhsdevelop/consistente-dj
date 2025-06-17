@@ -73,6 +73,16 @@
             </tr>
             {% endfor %}
           </tbody>
+          {% if soma_meses %}
+          <tfoot>
+            <tr>
+              <td class="text-900" >TOTAL</td>
+              {% for mes, valor in soma_meses.items %}
+              <td class="text-900" align="right"{% if valor < 0 %} style="color:red"{% endif %}>{{ valor }}</td>
+              {% endfor %}
+            </tr>
+          </tfoot>
+          {% endif %}
           {% endif %}
         </table>
       </div>

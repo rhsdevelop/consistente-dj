@@ -2593,6 +2593,7 @@ def resumo_parceiro(request):
     filter_customer = {}
     filter_search = {}
     filter_initial = {}
+    soma_meses = {}
     list_diario = []
     if not request.user.is_staff:
         crc_user = ConsistenteUsuario.objects.filter(user=request.user)
@@ -2662,6 +2663,7 @@ def resumo_parceiro(request):
         filter_search['categoria__classifica'] = True
         meses = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth('datadoc')).values('mes').annotate(Sum('valor')).order_by('mes')
         meses = {str(x['mes'])[:7]: Decimal('0.00') for x in meses}
+        soma_meses = meses.copy()
         diario = Diario.objects.filter(**filter_customer).filter(**filter_search).annotate(mes=TruncMonth('datadoc')).values_list('parceiro__nome', 'mes').annotate(Sum('valor')).order_by('parceiro__nome', 'mes')
         new_item = {'parceiro': ''}
         primeiro = True
@@ -2684,6 +2686,7 @@ def resumo_parceiro(request):
                     'parceiro': i[0],
                     'meses': meses.copy()
                 }
+            soma_meses[str(i[1])[:7]] += round(i[2], 2)
             new_item['meses'][str(i[1])[:7]] = round(i[2], 2)
         list_diario.append(new_item)
     else:
@@ -2707,6 +2710,7 @@ def resumo_parceiro(request):
         'form': form,
         'meses': '","'.join([str(x)[:7] for x in meses]),
         'lista_mes': [str(x)[:7] for x in meses],
+        'soma_meses': soma_meses,
         'active_relatorios': 'show',
         'active_relatorios_parceiro': 'active',
     }

@@ -2329,8 +2329,8 @@ def resumo_pagamentos(request):
                 mes = int(periodo[1])
                 filter_search['%s__lte' % chave[key]] = value + '-%s' % monthrange(ano, mes)[1]
         if not 'banco' in filter_search:
-            filter_initial['banco__tipomov__in'] = [0, 1]
-            filter_search['banco__tipomov__in'] = [0, 1]
+            filter_initial['banco__tipomov__in'] = [0, 1, 2]
+            filter_search['banco__tipomov__in'] = [0, 1, 2]
         filter_initial['tipomov__in'] = [0, 3]
         soma_entradas = Diario.objects.filter(**filter_customer).filter(**filter_initial)
         filter_initial['tipomov__in'] = [1, 4]
